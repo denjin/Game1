@@ -11,10 +11,7 @@ import flixel.text.FlxText;
 import flixel.ui.FlxButton;
 import flixel.math.FlxMath;
 import haxe.io.Float32Array;
-import objects.Intersect;
-import objects.Line;
-import objects.MyPoint;
-import vision.VisionManager;
+
 using flixel.util.FlxSpriteUtil;
 import flixel.util.FlxSpriteUtil.LineStyle;
 import flixel.util.FlxSpriteUtil.DrawStyle;
@@ -23,6 +20,11 @@ import flash.display.BitmapDataChannel;
 import flash.geom.ColorTransform;
 
 import objects.Box;
+import objects.Intersect;
+import objects.Line;
+import objects.MyPoint;
+
+import vision.VisionManager;
 
 import flixel.addons.nape.FlxNapeSpace;
 
@@ -42,8 +44,6 @@ class PlayState extends FlxState
 	
 	private var boxes:Array<Box>;
 	
-	private var debugText:FlxText;
-	
 	private var mousePosition:FlxPoint;
 	
 	private var visionMask:FlxSprite;
@@ -62,20 +62,15 @@ class PlayState extends FlxState
 	
 	override public function create():Void
 	{
-		this.bgColor = 0x00ffffff;
-		
+		//init some utility variables
 		mousePosition = new FlxPoint(0, 0);
-		
 		screenWidth = FlxG.stage.stageWidth;
 		screenHeight = FlxG.stage.stageHeight;
-		
-		//FlxG.log.redirectTraces = true;
-		
+		//init the physics space
 		FlxNapeSpace.init();
-		//FlxNapeSpace.drawDebug = true;
 		FlxNapeSpace.space.gravity.setxy(0, 0);
 		super.create();
-		
+		//init the graphics
 		initGraphics();
 		
 		createBoxes();
@@ -83,11 +78,10 @@ class PlayState extends FlxState
 
 	override public function update(elapsed:Float):Void
 	{
-		
+		//update mouse position
 		mousePosition.x = FlxG.mouse.x;
 		mousePosition.y = FlxG.mouse.y;
 		
-		//mousePositionText.text = Std.string(mouseX) + " | " + Std.string(mouseY);
 		super.update(elapsed);
 		
 		drawVision();
@@ -172,24 +166,23 @@ class PlayState extends FlxState
 	{
 		//clear the vision layer
 		visionMask.fill(0x44000000);
-		
 		//get all points including "buffer" points
 		var points:Array<FlxPoint> = getAllPoints(faces);
-		
 		//build the vision polygon
 		var visionPolygon:Array<FlxPoint> = VisionManager.instance.buildVisionPolygon(mousePosition, faces, points);
-		
-		//draw visible area
+		//draw visible area into the vision and fog masks
 		visionMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
-		
 		fogMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
-		
-		
 		//mask the floor
 		invertedAlphaMaskFlxSprite(fogShadow, fogMask, fogShadow);
 		invertedAlphaMaskFlxSprite(visionShadow, visionMask, visionShadow);
 	}
 	
+	/**
+	 * Gets an array of points, including "buffer" points around each one (ensures that rays cast towards the points reach the walls behind
+	 * @param	faces
+	 * @return
+	 */
 	private function getAllPoints(faces:Array<Line>):Array<FlxPoint>
 	{
 		var points:Array<FlxPoint> = new Array<FlxPoint>();
@@ -210,12 +203,13 @@ class PlayState extends FlxState
 		return points;
 	}
 	
-	
-	
-	
-	
-	
-	
+	/**
+	 * applies the mask sprite as an inverse mask to the given sprite and returns it into the output sprite
+	 * @param	sprite
+	 * @param	mask
+	 * @param	output
+	 * @return
+	 */
 	public static function invertedAlphaMaskFlxSprite(sprite:FlxSprite, mask:FlxSprite, output:FlxSprite):FlxSprite
 	{
 		sprite.drawFrame();
