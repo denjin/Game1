@@ -79,10 +79,10 @@ class VisionManager {
 				continue;
 			}
 			//if this intersect is closer than the previous closest intersect
-			if (thisIntersect.t1 < intersect1.t1)
+			if (thisIntersect.t1 < closestIntersect.t1)
 			{
 				//make this intersect the new closest
-				intersect1 = thisIntersect;
+				closestIntersect = thisIntersect;
 				//carry on to the next face
 			}
 		}
