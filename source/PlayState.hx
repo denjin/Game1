@@ -19,6 +19,8 @@ import flash.geom.Rectangle;
 import flash.display.BitmapDataChannel;
 import flash.geom.ColorTransform;
 
+import player.Player;
+
 import objects.Box;
 import objects.Intersect;
 import objects.Line;
@@ -39,7 +41,7 @@ class PlayState extends FlxState
 	private var wallSides:FlxSprite;
 	private var wallTops:FlxSprite;
 	
-	
+	private var player:Player;
 	
 	
 	private var boxes:Array<Box>;
@@ -74,6 +76,8 @@ class PlayState extends FlxState
 		initGraphics();
 		
 		createBoxes();
+		
+		initPlayer();
 	}
 
 	override public function update(elapsed:Float):Void
@@ -85,6 +89,12 @@ class PlayState extends FlxState
 		super.update(elapsed);
 		
 		drawVision();
+	}
+	
+	private function initPlayer():Void
+	{
+		player = new Player(screenWidth / 2, screenHeight / 2);
+		add(player);
 	}
 	
 	/**
