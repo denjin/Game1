@@ -56,24 +56,34 @@ class VisionManager {
 	private static function findClosestIntersect(ray:Line, faces:Array<Line>):Intersect
 	{
 		var closestIntersect:Intersect = null;
-		var intersect:Intersect;
+		
+		var thisIntersect:Intersect;
 		//loop through all faces and find the closet intersect with the given ray
 		
 		for (j in faces)
 		{
 			//get the intersect between this face and the ray
-			intersect = getIntersect(ray, j);
+			thisIntersect = getIntersect(ray, j);
 			//if there was no intersect found
-			if (intersect == null)
+			if (thisIntersect == null)
 			{
 				//carry on to the next face
 				continue;
 			}
-			//if this is the first intersect found or this intersect is closer than the previous
-			if (closestIntersect == null || intersect.t1 < closestIntersect.t1)
+			//if this is the first intersect found
+			if (closestIntersect == null)
 			{
-				//make this intersec the new closest
-				closestIntersect = intersect;
+				//make this intersect the new closest
+				closestIntersect = thisIntersect;
+				//carry on to the next face
+				continue;
+			}
+			//if this intersect is closer than the previous closest intersect
+			if (thisIntersect.t1 < intersect1.t1)
+			{
+				//make this intersect the new closest
+				intersect1 = thisIntersect;
+				//carry on to the next face
 			}
 		}
 		return closestIntersect;

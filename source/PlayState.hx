@@ -141,7 +141,7 @@ class PlayState extends FlxState
 		boxes[3] = new Box(800, 400, 10, 800);
 		add(boxes[3]);
 		
-		for (i in 4...54)
+		for (i in 4...14)
 		{
 			boxes[i] = new Box(Math.random() * 700 + 50, Math.random() * 700 + 50, 30, 30);
 			add(boxes[i]);
@@ -164,7 +164,7 @@ class PlayState extends FlxState
 	 */
 	private function drawVision():Void
 	{
-		//clear the vision layer
+		//clear the vision layer, but not the fog layer (means that the vision layer is drawn fresh each frame but the fog layer is a permenant mask of visible areas)
 		visionMask.fill(0x44000000);
 		//get all points including "buffer" points
 		var points:Array<FlxPoint> = getAllPoints(faces);
@@ -173,7 +173,7 @@ class PlayState extends FlxState
 		//draw visible area into the vision and fog masks
 		visionMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
 		fogMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
-		//mask the floor
+		//apply the generated vision polygons to the shadow sprites
 		invertedAlphaMaskFlxSprite(fogShadow, fogMask, fogShadow);
 		invertedAlphaMaskFlxSprite(visionShadow, visionMask, visionShadow);
 	}
