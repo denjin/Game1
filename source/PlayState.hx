@@ -32,6 +32,8 @@ import objects.MyPoint;
 import vision.VisionManager;
 import Util;
 
+import openfl.display.FPS;
+
 import flixel.addons.nape.FlxNapeSpace;
 
 import flixel.addons.nape.FlxNapeSprite;
@@ -42,6 +44,7 @@ class PlayState extends FlxState
 	private var screenHeight:Int;
 	
 	private var debugText:FlxText;
+	private var fps:FPS;
 	
 	private var floor:FlxSprite;
 	private var wallSides:FlxSprite;
@@ -83,7 +86,6 @@ class PlayState extends FlxState
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
-		FlxNapeSpace.drawDebug = true;
 		super.create();
 		//init the graphics
 		initGraphics();
@@ -96,6 +98,9 @@ class PlayState extends FlxState
 		
 		debugText = new FlxText(0, 0, 100);
 		add(debugText);
+		
+		FlxG.addChildBelowMouse(fps = new FPS(FlxG.width - 60, 5, FlxColor.WHITE));
+		
 	}
 
 	override public function update(elapsed:Float):Void
