@@ -21,6 +21,7 @@ import flash.display.BitmapDataChannel;
 import flash.geom.ColorTransform;
 
 import flixel.input.gamepad.FlxGamepad;
+import flixel.input.keyboard.FlxKeyboard;
 
 import player.Player;
 
@@ -51,7 +52,7 @@ class PlayState extends FlxState
 	private var wallTops:FlxSprite;
 	
 	private var player:Player;
-	private var acc:Float = 300;
+	private var acc:Float = 60;
 	private var maxSpeed:Float = 300;
 	
 	
@@ -72,8 +73,8 @@ class PlayState extends FlxState
 	private var drawStyle:DrawStyle = { smoothing: true };
 	
 	public var gamepad:FlxGamepad;
-	private var leftStick:FlxPoint;
-	private var rightStick:FlxPoint;
+	private var moveAxis:FlxPoint;
+	//private var moveYAxis:FlxPoint;
 	
 	
 	
@@ -93,8 +94,7 @@ class PlayState extends FlxState
 		createBoxes();
 		
 		initPlayer();
-		leftStick = new FlxPoint();
-		rightStick = new FlxPoint();
+		moveAxis = new FlxPoint();
 		
 		debugText = new FlxText(0, 0, 100);
 		add(debugText);
@@ -115,25 +115,32 @@ class PlayState extends FlxState
 		
 		gamepad = FlxG.gamepads.lastActive;
 		
-		if (gamepad == null)
+		if (gamepad != null)
 		{
-			return;
+			var pressed = gamepad.pressed;
+			var value = gamepad.analog.value;
+			moveAxis.x = value.LEFT_STICK_X;
+			moveAxis.y = value.LEFT_STICK_Y;
+			
+		} else {
+			if (FlxG.keys.pressed.A)
+				moveAxis.x = -1;
+			
+			if (FlxG.keys.pressed.D)
+				moveAxis.x = 1;
+				
+			if (FlxG.keys.pressed.W)
+				moveAxis.y = -1;
+			
+			if (FlxG.keys.pressed.S)
+				moveAxis.y = 1;
 		}
 		
-		var pressed = gamepad.pressed;
-		//debutText.text = Std.string(pressed.ANY);
-		var value = gamepad.analog.value;
-		leftStick.x = value.LEFT_STICK_X;
-		leftStick.y = value.LEFT_STICK_Y;
-		rightStick.x = value.RIGHT_STICK_X;
-		rightStick.y = value.RIGHT_STICK_X;
-		var angle:Float = Util.instance.getAngle(new FlxPoint(0, 0), leftStick);
-		//debugText.text = Std.string(angle - Math.PI);
+		player.body.applyImpulse = Vec2.weak(moveAxis.x * acc, moveAxis.y * acc);
 		
-		var acceleration = acc * elapsed;
-		var impulse:Vec2 = Vec2.weak(leftStick.x * acc, leftStick.y * acc);
 		
-		player.body.applyImpulse(impulse);
+		//var dir:Vec2 = Vec2.weak(leftStick.x * acc, leftStick.y * acc);
+		//player.body.velocity = impulse;
 		
 		
 		//debutText.text = Std.string();
@@ -199,7 +206,7 @@ class PlayState extends FlxState
 		boxes[3] = new Box(800, 400, 10, 800);
 		add(boxes[3]);
 		
-		for (i in 4...14)
+		for (i in 4...9)
 		{
 			boxes[i] = new Box(Math.random() * 700 + 50, Math.random() * 700 + 50, 30, 30);
 			add(boxes[i]);

@@ -16,6 +16,7 @@ class Player extends FlxNapeSprite
 		this.loadGraphic("assets/images/player.png");
 		this.createCircularBody(21, BodyType.DYNAMIC);
 		this.physicsEnabled = true;
+		//this.body.allowRotation = false;
 		//this.createRectangularBody(33, 43, BodyType.DYNAMIC);
 	}
 	
