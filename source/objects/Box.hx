@@ -20,6 +20,7 @@ class Box extends FlxNapeSprite
 		//init the graphics and physics body
 		this.makeGraphic(_width, _height, /*0xff708583*/FlxColor.TRANSPARENT);
 		this.createRectangularBody(_width, _height, BodyType.STATIC);
+		this.physicsEnabled = true;
 		//store the vertices
 		vertices[0] = new FlxPoint(_x - _width / 2, _y - _height / 2);
 		vertices[1] = new FlxPoint(_x + _width / 2, _y - _height / 2);

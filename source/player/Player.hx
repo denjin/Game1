@@ -14,7 +14,9 @@ class Player extends FlxNapeSprite
 		//init the graphics and physics body
 		this.makeGraphic(33, 43, FlxColor.TRANSPARENT);
 		this.loadGraphic("assets/images/player.png");
-		this.createRectangularBody(33, 43, BodyType.DYNAMIC);
+		this.createCircularBody(21, BodyType.DYNAMIC);
+		this.physicsEnabled = true;
+		//this.createRectangularBody(33, 43, BodyType.DYNAMIC);
 	}
 	
 }

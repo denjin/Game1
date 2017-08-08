@@ -11,6 +11,7 @@ import flixel.text.FlxText;
 import flixel.ui.FlxButton;
 import flixel.math.FlxMath;
 import haxe.io.Float32Array;
+import nape.geom.Vec2;
 
 using flixel.util.FlxSpriteUtil;
 import flixel.util.FlxSpriteUtil.LineStyle;
@@ -18,6 +19,8 @@ import flixel.util.FlxSpriteUtil.DrawStyle;
 import flash.geom.Rectangle;
 import flash.display.BitmapDataChannel;
 import flash.geom.ColorTransform;
+
+import flixel.input.gamepad.FlxGamepad;
 
 import player.Player;
 
@@ -27,6 +30,7 @@ import objects.Line;
 import objects.MyPoint;
 
 import vision.VisionManager;
+import Util;
 
 import flixel.addons.nape.FlxNapeSpace;
 
@@ -37,11 +41,15 @@ class PlayState extends FlxState
 	private var screenWidth:Int;
 	private var screenHeight:Int;
 	
+	private var debugText:FlxText;
+	
 	private var floor:FlxSprite;
 	private var wallSides:FlxSprite;
 	private var wallTops:FlxSprite;
 	
 	private var player:Player;
+	private var acc:Float = 300;
+	private var maxSpeed:Float = 300;
 	
 	
 	private var boxes:Array<Box>;
@@ -60,6 +68,10 @@ class PlayState extends FlxState
 	private var lineStyle:LineStyle = { color: FlxColor.TRANSPARENT, thickness: 1 };
 	private var drawStyle:DrawStyle = { smoothing: true };
 	
+	public var gamepad:FlxGamepad;
+	private var leftStick:FlxPoint;
+	private var rightStick:FlxPoint;
+	
 	
 	
 	override public function create():Void
@@ -71,6 +83,7 @@ class PlayState extends FlxState
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
+		FlxNapeSpace.drawDebug = true;
 		super.create();
 		//init the graphics
 		initGraphics();
@@ -78,6 +91,11 @@ class PlayState extends FlxState
 		createBoxes();
 		
 		initPlayer();
+		leftStick = new FlxPoint();
+		rightStick = new FlxPoint();
+		
+		debugText = new FlxText(0, 0, 100);
+		add(debugText);
 	}
 
 	override public function update(elapsed:Float):Void
@@ -89,6 +107,31 @@ class PlayState extends FlxState
 		super.update(elapsed);
 		
 		drawVision();
+		
+		gamepad = FlxG.gamepads.lastActive;
+		
+		if (gamepad == null)
+		{
+			return;
+		}
+		
+		var pressed = gamepad.pressed;
+		//debutText.text = Std.string(pressed.ANY);
+		var value = gamepad.analog.value;
+		leftStick.x = value.LEFT_STICK_X;
+		leftStick.y = value.LEFT_STICK_Y;
+		rightStick.x = value.RIGHT_STICK_X;
+		rightStick.y = value.RIGHT_STICK_X;
+		var angle:Float = Util.instance.getAngle(new FlxPoint(0, 0), leftStick);
+		//debugText.text = Std.string(angle - Math.PI);
+		
+		var acceleration = acc * elapsed;
+		var impulse:Vec2 = Vec2.weak(leftStick.x * acc, leftStick.y * acc);
+		
+		player.body.applyImpulse(impulse);
+		
+		
+		//debutText.text = Std.string();
 	}
 	
 	private function initPlayer():Void
