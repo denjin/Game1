@@ -4,6 +4,7 @@ import flixel.FlxSprite;
 import flixel.math.FlxPoint;
 import objects.Intersect;
 import objects.Line;
+import Util;
 
 class VisionManager {
 	static public var instance(get, null):VisionManager;
@@ -29,8 +30,8 @@ class VisionManager {
 		
 		//sort intersects by angle
 		intersects.sort(function(a:Intersect, b:Intersect) {
-			var a_angle:Float = getAngle(new FlxPoint(a.x, a.y), source);
-			var b_angle:Float = getAngle(new FlxPoint(b.x, b.y), source);
+			var a_angle:Float = Util.instance.getAngle(new FlxPoint(a.x, a.y), source);
+			var b_angle:Float = Util.instance.getAngle(new FlxPoint(b.x, b.y), source);
 			if(a_angle < b_angle) return -1;
 			else if(a_angle > b_angle) return 1;
 			else return 0;
@@ -136,9 +137,6 @@ class VisionManager {
 		return new Intersect(r_px + r_dx * t1, r_py + r_dy * t1, t1);
 	}
 	
-	private function getAngle(a:FlxPoint, b:FlxPoint):Float
-	{
-		return Math.atan2(a.y - b.y, a.x - b.x) + Math.PI;
-	}
+	
 	
 }
