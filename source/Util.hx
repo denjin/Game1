@@ -9,7 +9,7 @@ class Util
 	
 	public function getAngle(a:FlxPoint, b:FlxPoint):Float
 	{
-		return Math.atan2(a.y - b.y, a.x - b.x) + Math.PI;
+		return Math.atan2(a.y - b.y, a.x - b.x);
 	}
 	
 }
