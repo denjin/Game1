@@ -155,6 +155,8 @@ class PlayState extends FlxState
 			}
 		}
 		
+		player.body.rotation = Util.instance.getAngle(mousePosition, new FlxPoint(player.body.position.x, player.body.position.y));
+		
 		debugText.text = Std.string(player.body.velocity);
 		
 		//var dir:Vec2 = Vec2.weak(leftStick.x * acc, leftStick.y * acc);
