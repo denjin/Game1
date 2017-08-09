@@ -18,7 +18,7 @@ class Box extends FlxNapeSprite
 	{	
 		super(_x, _y, SimpleGraphic, CreateRectangularBody, EnablePhysics);
 		//init the graphics and physics body
-		this.makeGraphic(_width, _height, /*0xff708583*/FlxColor.TRANSPARENT);
+		this.makeGraphic(_width, _height, 0xff708583/*FlxColor.TRANSPARENT*/);
 		this.createRectangularBody(_width, _height, BodyType.STATIC);
 		this.physicsEnabled = true;
 		//store the vertices

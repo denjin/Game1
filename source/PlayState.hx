@@ -52,8 +52,8 @@ class PlayState extends FlxState
 	private var wallTops:FlxSprite;
 	
 	private var player:Player;
-	private var acc:Float = 60;
-	private var maxSpeed:Float = 300;
+	private var acc:Float = 10000;
+	private var speed:Float = 200;
 	
 	
 	private var boxes:Array<Box>;
@@ -87,6 +87,7 @@ class PlayState extends FlxState
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
+		
 		super.create();
 		//init the graphics
 		initGraphics();
@@ -105,11 +106,15 @@ class PlayState extends FlxState
 
 	override public function update(elapsed:Float):Void
 	{
+		
+		
+		moveAxis.x = 0;
+		moveAxis.y = 0;
 		//update mouse position
 		mousePosition.x = FlxG.mouse.x;
 		mousePosition.y = FlxG.mouse.y;
 		
-		super.update(elapsed);
+		
 		
 		drawVision();
 		
@@ -123,27 +128,42 @@ class PlayState extends FlxState
 			moveAxis.y = value.LEFT_STICK_Y;
 			
 		} else {
-			if (FlxG.keys.pressed.A)
-				moveAxis.x = -1;
+			if (FlxG.keys.anyPressed([A, LEFT]))
+			{
+				player.body.velocity.x = -speed;
+			}
+			else if (FlxG.keys.anyPressed([D, RIGHT]))
+			{
+				player.body.velocity.x = speed;
+			}
+			else
+			{
+				player.body.velocity.x = 0;
+			}
 			
-			if (FlxG.keys.pressed.D)
-				moveAxis.x = 1;
-				
-			if (FlxG.keys.pressed.W)
-				moveAxis.y = -1;
-			
-			if (FlxG.keys.pressed.S)
-				moveAxis.y = 1;
+			if (FlxG.keys.anyPressed([W, UP]))
+			{
+				player.body.velocity.y = -speed;
+			}
+			else if (FlxG.keys.anyPressed([S, DOWN]))
+			{
+				player.body.velocity.y = speed;
+			}
+			else
+			{
+				player.body.velocity.y = 0;
+			}
 		}
 		
-		player.body.applyImpulse = Vec2.weak(moveAxis.x * acc, moveAxis.y * acc);
-		
+		debugText.text = Std.string(player.body.velocity);
 		
 		//var dir:Vec2 = Vec2.weak(leftStick.x * acc, leftStick.y * acc);
 		//player.body.velocity = impulse;
 		
 		
 		//debutText.text = Std.string();
+		super.update(elapsed);
+		
 	}
 	
 	private function initPlayer():Void
@@ -234,7 +254,7 @@ class PlayState extends FlxState
 		//get all points including "buffer" points
 		var points:Array<FlxPoint> = getAllPoints(faces);
 		//build the vision polygon
-		var visionPolygon:Array<FlxPoint> = VisionManager.instance.buildVisionPolygon(mousePosition, faces, points);
+		var visionPolygon:Array<FlxPoint> = VisionManager.instance.buildVisionPolygon(new FlxPoint(player.body.position.x, player.body.position.y), faces, points);
 		//draw visible area into the vision and fog masks
 		visionMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
 		fogMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
