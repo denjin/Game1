@@ -1,5 +1,7 @@
 package;
 
+import flixel.FlxCamera;
+
 import flash.display.BitmapData;
 import flash.geom.Point;
 import flixel.FlxG;
@@ -108,6 +110,7 @@ class PlayState extends FlxState
 		
 		FlxG.addChildBelowMouse(fps = new FPS(FlxG.width - 60, 5, FlxColor.WHITE));
 		
+		FlxG.camera.follow(player, LOCKON, 1);
 	}
 
 	override public function update(elapsed:Float):Void
@@ -163,6 +166,7 @@ class PlayState extends FlxState
 		}
 		
 		player.body.rotation = Util.instance.getAngle(mousePosition, playerPosition);
+		arcMask.angle = Util.instance.radToDeg(Util.instance.getAngle(mousePosition, playerPosition));
 		
 		debugText.text = Std.string(player.body.velocity);
 		
@@ -194,7 +198,7 @@ class PlayState extends FlxState
 		//sprite that occludes the area of the map not currently visible
 		visionShadow = new FlxSprite(0, 0);
 		visionShadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
-		visionShadow.alpha = 0.5;
+		//visionShadow.alpha = 0.5;
 		add(visionShadow);
 		
 		//sprite that occludes the area of the map that hasn't yet been visible
@@ -216,7 +220,7 @@ class PlayState extends FlxState
 		arcMask = new FlxSprite(0, 0);
 		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
 		arcMask.loadGraphic("assets/images/mask.png");
-		//add(arcMask);
+		add(arcMask);
 	}
 	
 	
@@ -224,8 +228,8 @@ class PlayState extends FlxState
 	{
 		boxes = new Array<Box>();
 		
-		boxes[0] = new Box(400, 400, 50, 50);
-		add(boxes[0]);
+		//boxes[0] = new Box(400, 400, 50, 50);
+		//add(boxes[0]);
 		/*
 		boxes[1] = new Box(400, 800, 800, 10);
 		add(boxes[1]);
@@ -233,13 +237,13 @@ class PlayState extends FlxState
 		add(boxes[2]);
 		boxes[3] = new Box(800, 400, 10, 800);
 		add(boxes[3]);
-		
-		for (i in 4...5)
+		*/
+		for (i in 0...50)
 		{
 			boxes[i] = new Box(Math.random() * 700 + 50, Math.random() * 700 + 50, 30, 30);
 			add(boxes[i]);
 		}
-		*/
+		
 		
 		
 		
@@ -266,7 +270,9 @@ class PlayState extends FlxState
 		//go through each box
 		for (b in boxes)
 		{
-			//clear the points
+			if (Util.instance.getDistance(b.or, playerPosition) < visionLength)
+			{
+				//clear the points
 			points = [];
 			shadowPoints = [];
 			//go through each vertex
@@ -313,7 +319,11 @@ class PlayState extends FlxState
 			//draw a polygon using the sorted points
 			visionShadow.drawPolygon(allPoints, 0xff000000, lineStyle, drawStyle);
 			//add the arc mask to the shadow
-			visionShadow.stamp(arcMask, Std.int(playerPosition.x - 400), Std.int(playerPosition.y - 400));
+			arcMask.x = playerPosition.x - 400;
+			arcMask.y = playerPosition.y - 400;
+			//visionShadow.stamp(arcMask, Std.int(playerPosition.x - 400), Std.int(playerPosition.y - 400));
+			}
+			
 		}
 	}
 	
