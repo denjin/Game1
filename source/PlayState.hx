@@ -48,20 +48,25 @@ class PlayState extends FlxState
 	private var fps:FPS;
 	
 	private var floor:FlxSprite;
-	private var wallSides:FlxSprite;
-	private var wallTops:FlxSprite;
 	
 	private var player:Player;
-	private var acc:Float = 10000;
 	private var speed:Float = 200;
+	
+	private var visionArc:Float = Math.PI / 6;
+	private var visionLength:Float = 300;
 	
 	
 	private var boxes:Array<Box>;
 	
 	private var mousePosition:FlxPoint;
+	private var playerPosition:FlxPoint;
+	
+	private var arcMask:FlxSprite;
 	
 	private var visionMask:FlxSprite;
 	private var fogMask:FlxSprite;
+	
+	
 	
 	private var visionShadow:FlxSprite;
 	private var fogShadow:FlxSprite;
@@ -82,6 +87,7 @@ class PlayState extends FlxState
 	{
 		//init some utility variables
 		mousePosition = new FlxPoint(0, 0);
+		playerPosition = new FlxPoint(400, 400);
 		screenWidth = FlxG.stage.stageWidth;
 		screenHeight = FlxG.stage.stageHeight;
 		//init the physics space
@@ -113,7 +119,8 @@ class PlayState extends FlxState
 		//update mouse position
 		mousePosition.x = FlxG.mouse.x;
 		mousePosition.y = FlxG.mouse.y;
-		
+		playerPosition.x = player.body.position.x;
+		playerPosition.y = player.body.position.y;
 		
 		
 		drawVision();
@@ -155,13 +162,12 @@ class PlayState extends FlxState
 			}
 		}
 		
-		player.body.rotation = Util.instance.getAngle(mousePosition, new FlxPoint(player.body.position.x, player.body.position.y));
+		player.body.rotation = Util.instance.getAngle(mousePosition, playerPosition);
 		
 		debugText.text = Std.string(player.body.velocity);
 		
 		//var dir:Vec2 = Vec2.weak(leftStick.x * acc, leftStick.y * acc);
 		//player.body.velocity = impulse;
-		
 		
 		//debutText.text = Std.string();
 		super.update(elapsed);
@@ -178,40 +184,39 @@ class PlayState extends FlxState
 	 * Creates and adds the various graphics assets into the scene
 	 */
 	private function initGraphics():Void
-	{
+	{	
 		//sprite to hold the floor graphics
 		floor = new FlxSprite(0, 0);
 		floor.makeGraphic(screenWidth, screenHeight, 0xff88A2A0);
 		//floor.loadGraphic("assets/images/floor.png");
 		add(floor);
 		
-		//sprite that holds the sides of the wall graphics
-		wallSides = new FlxSprite(0, 0);
-		wallSides.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT);
-		add(wallSides);
-		
-		//sprite that holds the tops of the wall graphics
-		wallTops = new FlxSprite(0, 0);
-		wallTops.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT);
-		add(wallTops);
-		
 		//sprite that occludes the area of the map not currently visible
 		visionShadow = new FlxSprite(0, 0);
-		visionShadow.makeGraphic(screenWidth, screenHeight, 0x66000000, true);
+		visionShadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
+		visionShadow.alpha = 0.5;
 		add(visionShadow);
 		
 		//sprite that occludes the area of the map that hasn't yet been visible
 		fogShadow = new FlxSprite(0, 0);
-		fogShadow.makeGraphic(screenWidth, screenHeight, 0x66000000, true);
+		fogShadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
+		visionShadow.alpha = 0.5;
 		add(fogShadow);
 		
 		//sprite that masks the visible area
 		visionMask = new FlxSprite(0, 0);
 		visionMask.makeGraphic(FlxG.width, FlxG.height, 0x66000000, true);
+		add(visionMask);
 		
 		//sprite that masks the unrevealed area
 		fogMask = new FlxSprite(0, 0);
 		fogMask.makeGraphic(FlxG.width, FlxG.height, 0x00000000, true);
+		add(fogMask);
+		
+		arcMask = new FlxSprite(0, 0);
+		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
+		arcMask.loadGraphic("assets/images/mask.png");
+		//add(arcMask);
 	}
 	
 	
@@ -219,8 +224,9 @@ class PlayState extends FlxState
 	{
 		boxes = new Array<Box>();
 		
-		boxes[0] = new Box(400, 0, 800, 10);
+		boxes[0] = new Box(400, 400, 50, 50);
 		add(boxes[0]);
+		/*
 		boxes[1] = new Box(400, 800, 800, 10);
 		add(boxes[1]);
 		boxes[2] = new Box(0, 400, 10, 800);
@@ -228,11 +234,12 @@ class PlayState extends FlxState
 		boxes[3] = new Box(800, 400, 10, 800);
 		add(boxes[3]);
 		
-		for (i in 4...9)
+		for (i in 4...5)
 		{
 			boxes[i] = new Box(Math.random() * 700 + 50, Math.random() * 700 + 50, 30, 30);
 			add(boxes[i]);
 		}
+		*/
 		
 		
 		
@@ -250,19 +257,64 @@ class PlayState extends FlxState
 	 * Draws the visible area as a polygon and applies that polygon as an inverse mask to the given sprite
 	 */
 	private function drawVision():Void
-	{
-		//clear the vision layer, but not the fog layer (means that the vision layer is drawn fresh each frame but the fog layer is a permenant mask of visible areas)
-		visionMask.fill(0x44000000);
-		//get all points including "buffer" points
-		var points:Array<FlxPoint> = getAllPoints(faces);
-		//build the vision polygon
-		var visionPolygon:Array<FlxPoint> = VisionManager.instance.buildVisionPolygon(new FlxPoint(player.body.position.x, player.body.position.y), faces, points);
-		//draw visible area into the vision and fog masks
-		visionMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
-		fogMask.drawPolygon(visionPolygon, 0xff000000, lineStyle, drawStyle);
-		//apply the generated vision polygons to the shadow sprites
-		invertedAlphaMaskFlxSprite(fogShadow, fogMask, fogShadow);
-		invertedAlphaMaskFlxSprite(visionShadow, visionMask, visionShadow);
+	{	
+		//clear the vision layer
+		visionShadow.fill(FlxColor.TRANSPARENT);
+		
+		var points:Array<FlxPoint> = new Array<FlxPoint>();
+		var shadowPoints:Array<FlxPoint> = new Array<FlxPoint>();
+		//go through each box
+		for (b in boxes)
+		{
+			//clear the points
+			points = [];
+			shadowPoints = [];
+			//go through each vertex
+			for (p in b.vertices)
+			{
+				//add this vertex to the array
+				points.push(p);
+				//get the angle between player and point
+				var theta:Float = Util.instance.getAngle(p, playerPosition);
+				//get the x & y distances
+				var dx1:Float = p.x - playerPosition.x;
+				var dy1:Float = p.y - playerPosition.y;
+				//get the projected x & y distances
+				var dx2:Float = Math.cos(theta) * visionLength * 2;
+				var dy2:Float = Math.sin(theta) * visionLength * 2;
+				//get projected point
+				var p2:FlxPoint = new FlxPoint(playerPosition.x + dx2, playerPosition.y + dy2);
+				//get the distance between the point and the projected point
+				var d_abs1:Float = Util.instance.getDistance(playerPosition, p);
+				var d_abs2:Float = Util.instance.getDistance(playerPosition, p2);
+				//if the project point is farther away than the source point
+				if (d_abs1 < d_abs2)
+					//add the shadow point to the array
+					shadowPoints.push(p2);
+			}
+			//sort points by angle
+			points = Util.instance.sortByAngle(points, playerPosition);
+			
+			var halfPi:Float = Math.PI / 2;
+			//remove the 2 points who have the angles between the greatest and smallest, taking into account the weirdness with atan2
+			if (Util.instance.getAngle(points[0], playerPosition) < 0 - halfPi && Util.instance.getAngle(points[3], playerPosition) > halfPi)
+			{
+				points.pop();
+				points.shift();
+			} else {
+				points.splice(1, 2);
+			}
+			//append the shadow points to the source points
+			var allPoints:Array<FlxPoint> = points.concat(shadowPoints);
+			//get average position between each stored point
+			var average:FlxPoint = Util.instance.getAveragePosition(allPoints);
+			//sort all points by angle from average (ensures the polygon draws properly)
+			allPoints = Util.instance.sortByAngle(allPoints, average);
+			//draw a polygon using the sorted points
+			visionShadow.drawPolygon(allPoints, 0xff000000, lineStyle, drawStyle);
+			//add the arc mask to the shadow
+			visionShadow.stamp(arcMask, Std.int(playerPosition.x - 400), Std.int(playerPosition.y - 400));
+		}
 	}
 	
 	/**
@@ -275,17 +327,24 @@ class PlayState extends FlxState
 		var points:Array<FlxPoint> = new Array<FlxPoint>();
 		for (f in faces)
 		{
-			points.push(f.a);
-			points.push(new FlxPoint(f.a.x + 1, f.a.y));
-			points.push(new FlxPoint(f.a.x, f.a.y + 1));
-			points.push(new FlxPoint(f.a.x - 1, f.a.y));
-			points.push(new FlxPoint(f.a.x, f.a.y - 1));
+			if (Util.instance.getDistance(f.a, playerPosition) <= visionLength)
+			{
+				points.push(f.a);
+				//points.push(new FlxPoint(f.a.x + 1, f.a.y));
+				//points.push(new FlxPoint(f.a.x, f.a.y + 1));
+				//points.push(new FlxPoint(f.a.x - 1, f.a.y));
+				//points.push(new FlxPoint(f.a.x, f.a.y - 1));
+			}
 			
-			points.push(f.b);
-			points.push(new FlxPoint(f.b.x + 1, f.b.y));
-			points.push(new FlxPoint(f.b.x, f.b.y + 1));
-			points.push(new FlxPoint(f.b.x - 1, f.a.y));
-			points.push(new FlxPoint(f.a.x, f.b.y - 1));
+			if (Util.instance.getDistance(f.b, playerPosition) <= visionLength)
+			{
+				points.push(f.b);
+				//points.push(new FlxPoint(f.b.x + 1, f.b.y));
+				//points.push(new FlxPoint(f.b.x, f.b.y + 1));
+				//points.push(new FlxPoint(f.b.x - 1, f.a.y));
+				//points.push(new FlxPoint(f.a.x, f.b.y - 1));
+			}
+			
 		}
 		return points;
 	}
