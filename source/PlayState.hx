@@ -43,8 +43,12 @@ import flixel.addons.nape.FlxNapeSprite;
 
 class PlayState extends FlxState
 {	
+	private var visionManager:VisionManager = new VisionManager();
+	
 	private var screenWidth:Int;
 	private var screenHeight:Int;
+	
+	private var shadowSize:Int = 2204;
 	
 	private var debugText:FlxText;
 	private var fps:FPS;
@@ -54,8 +58,8 @@ class PlayState extends FlxState
 	private var player:Player;
 	private var speed:Float = 200;
 	
-	private var visionArc:Float = Math.PI / 6;
-	private var visionLength:Float = 300;
+	//private var visionArc:Float = Math.PI / 6;
+	private var visionLength:Float = 640;
 	
 	
 	private var boxes:Array<Box>;
@@ -66,15 +70,9 @@ class PlayState extends FlxState
 	private var arcMask:FlxSprite;
 	
 	private var visionMask:FlxSprite;
-	private var fogMask:FlxSprite;
 	
 	
-	
-	private var visionShadow:FlxSprite;
-	private var fogShadow:FlxSprite;
-	
-	private var faces:Array<Line>;
-	private var intersects:Array<Intersect>;
+	private var shadow:FlxSprite;
 	
 	private var lineStyle:LineStyle = { color: FlxColor.TRANSPARENT, thickness: 1 };
 	private var drawStyle:DrawStyle = { smoothing: true };
@@ -83,6 +81,7 @@ class PlayState extends FlxState
 	private var moveAxis:FlxPoint;
 	//private var moveYAxis:FlxPoint;
 	
+	private var shadowPolygon:Array<FlxPoint> = new Array<FlxPoint>();
 	
 	
 	override public function create():Void
@@ -111,6 +110,11 @@ class PlayState extends FlxState
 		FlxG.addChildBelowMouse(fps = new FPS(FlxG.width - 60, 5, FlxColor.WHITE));
 		
 		FlxG.camera.follow(player, LOCKON, 1);
+		
+		arcMask = new FlxSprite(0, 0);
+		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
+		arcMask.loadGraphic("assets/images/mask.png");
+		add(arcMask);
 	}
 
 	override public function update(elapsed:Float):Void
@@ -196,64 +200,27 @@ class PlayState extends FlxState
 		add(floor);
 		
 		//sprite that occludes the area of the map not currently visible
-		visionShadow = new FlxSprite(0, 0);
-		visionShadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
-		//visionShadow.alpha = 0.5;
-		add(visionShadow);
-		
-		//sprite that occludes the area of the map that hasn't yet been visible
-		fogShadow = new FlxSprite(0, 0);
-		fogShadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
-		visionShadow.alpha = 0.5;
-		add(fogShadow);
+		shadow = new FlxSprite(0, 0);
+		shadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
+		shadow.alpha = 0.25;
+		add(shadow);
 		
 		//sprite that masks the visible area
 		visionMask = new FlxSprite(0, 0);
 		visionMask.makeGraphic(FlxG.width, FlxG.height, 0x66000000, true);
 		add(visionMask);
 		
-		//sprite that masks the unrevealed area
-		fogMask = new FlxSprite(0, 0);
-		fogMask.makeGraphic(FlxG.width, FlxG.height, 0x00000000, true);
-		add(fogMask);
 		
-		arcMask = new FlxSprite(0, 0);
-		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
-		arcMask.loadGraphic("assets/images/mask.png");
-		add(arcMask);
 	}
 	
 	
 	private function createBoxes():Void
 	{
 		boxes = new Array<Box>();
-		
-		//boxes[0] = new Box(400, 400, 50, 50);
-		//add(boxes[0]);
-		/*
-		boxes[1] = new Box(400, 800, 800, 10);
-		add(boxes[1]);
-		boxes[2] = new Box(0, 400, 10, 800);
-		add(boxes[2]);
-		boxes[3] = new Box(800, 400, 10, 800);
-		add(boxes[3]);
-		*/
 		for (i in 0...50)
 		{
-			boxes[i] = new Box(Math.random() * 700 + 50, Math.random() * 700 + 50, 30, 30);
+			boxes[i] = new Box(Math.random() * screenWidth, Math.random() * screenHeight, 30, 30);
 			add(boxes[i]);
-		}
-		
-		
-		
-		
-		faces = new Array<Line>();
-		for (i in boxes)
-		{
-			for (j in i.faces)
-			{
-				faces.push(j);
-			}
 		}
 	}
 	
@@ -263,101 +230,25 @@ class PlayState extends FlxState
 	private function drawVision():Void
 	{	
 		//clear the vision layer
-		visionShadow.fill(FlxColor.TRANSPARENT);
-		
-		var points:Array<FlxPoint> = new Array<FlxPoint>();
-		var shadowPoints:Array<FlxPoint> = new Array<FlxPoint>();
+		shadow.fill(FlxColor.TRANSPARENT);
 		//go through each box
 		for (b in boxes)
 		{
+			//check box is inside the range to actually have a visible shadow
 			if (Util.instance.getDistance(b.or, playerPosition) < visionLength)
 			{
-				//clear the points
-			points = [];
-			shadowPoints = [];
-			//go through each vertex
-			for (p in b.vertices)
-			{
-				//add this vertex to the array
-				points.push(p);
-				//get the angle between player and point
-				var theta:Float = Util.instance.getAngle(p, playerPosition);
-				//get the x & y distances
-				var dx1:Float = p.x - playerPosition.x;
-				var dy1:Float = p.y - playerPosition.y;
-				//get the projected x & y distances
-				var dx2:Float = Math.cos(theta) * visionLength * 2;
-				var dy2:Float = Math.sin(theta) * visionLength * 2;
-				//get projected point
-				var p2:FlxPoint = new FlxPoint(playerPosition.x + dx2, playerPosition.y + dy2);
-				//get the distance between the point and the projected point
-				var d_abs1:Float = Util.instance.getDistance(playerPosition, p);
-				var d_abs2:Float = Util.instance.getDistance(playerPosition, p2);
-				//if the project point is farther away than the source point
-				if (d_abs1 < d_abs2)
-					//add the shadow point to the array
-					shadowPoints.push(p2);
+				//build a shadow polygon for the given box
+				shadowPolygon = visionManager.buildShadowPolygon(b, playerPosition, visionLength);
+				//draw a polygon using the sorted points
+				shadow.drawPolygon(shadowPolygon, 0xff000000, lineStyle, drawStyle);
 			}
-			//sort points by angle
-			points = Util.instance.sortByAngle(points, playerPosition);
-			
-			var halfPi:Float = Math.PI / 2;
-			//remove the 2 points who have the angles between the greatest and smallest, taking into account the weirdness with atan2
-			if (Util.instance.getAngle(points[0], playerPosition) < 0 - halfPi && Util.instance.getAngle(points[3], playerPosition) > halfPi)
-			{
-				points.pop();
-				points.shift();
-			} else {
-				points.splice(1, 2);
-			}
-			//append the shadow points to the source points
-			var allPoints:Array<FlxPoint> = points.concat(shadowPoints);
-			//get average position between each stored point
-			var average:FlxPoint = Util.instance.getAveragePosition(allPoints);
-			//sort all points by angle from average (ensures the polygon draws properly)
-			allPoints = Util.instance.sortByAngle(allPoints, average);
-			//draw a polygon using the sorted points
-			visionShadow.drawPolygon(allPoints, 0xff000000, lineStyle, drawStyle);
-			//add the arc mask to the shadow
-			arcMask.x = playerPosition.x - 400;
-			arcMask.y = playerPosition.y - 400;
-			//visionShadow.stamp(arcMask, Std.int(playerPosition.x - 400), Std.int(playerPosition.y - 400));
-			}
-			
 		}
+		//add the arc mask to the shadow
+		arcMask.x = playerPosition.x - shadowSize / 2;
+		arcMask.y = playerPosition.y - shadowSize / 2;
 	}
 	
-	/**
-	 * Gets an array of points, including "buffer" points around each one (ensures that rays cast towards the points reach the walls behind
-	 * @param	faces
-	 * @return
-	 */
-	private function getAllPoints(faces:Array<Line>):Array<FlxPoint>
-	{
-		var points:Array<FlxPoint> = new Array<FlxPoint>();
-		for (f in faces)
-		{
-			if (Util.instance.getDistance(f.a, playerPosition) <= visionLength)
-			{
-				points.push(f.a);
-				//points.push(new FlxPoint(f.a.x + 1, f.a.y));
-				//points.push(new FlxPoint(f.a.x, f.a.y + 1));
-				//points.push(new FlxPoint(f.a.x - 1, f.a.y));
-				//points.push(new FlxPoint(f.a.x, f.a.y - 1));
-			}
-			
-			if (Util.instance.getDistance(f.b, playerPosition) <= visionLength)
-			{
-				points.push(f.b);
-				//points.push(new FlxPoint(f.b.x + 1, f.b.y));
-				//points.push(new FlxPoint(f.b.x, f.b.y + 1));
-				//points.push(new FlxPoint(f.b.x - 1, f.a.y));
-				//points.push(new FlxPoint(f.a.x, f.b.y - 1));
-			}
-			
-		}
-		return points;
-	}
+	
 	
 	/**
 	 * applies the mask sprite as an inverse mask to the given sprite and returns it into the output sprite

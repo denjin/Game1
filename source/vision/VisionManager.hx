@@ -2,139 +2,68 @@ package vision;
 
 import flixel.FlxSprite;
 import flixel.math.FlxPoint;
-import objects.Intersect;
-import objects.Line;
+import objects.Box;
 import Util;
 
 class VisionManager {
-	static public var instance(get, null):VisionManager;
-	static function get_instance(): VisionManager return (instance == null) ? instance = new VisionManager() : instance;
-	private function new() {}
+	private static inline var HALFPI:Float = 1.57079632679;
 	
-	/**
-	 * Creates an array of points that define a polygon of space visible from a source point
-	 * @param	source
-	 * @param	points
-	 * @return
-	 */
-	public function buildVisionPolygon(source:FlxPoint, faces:Array<Line>, points:Array<FlxPoint>):Array<FlxPoint>
+	//arrays and variables for building vision
+	private var points:Array<FlxPoint> = new Array<FlxPoint>();
+	private var shadowPoints:Array<FlxPoint> = new Array<FlxPoint>();
+	private var allPoints:Array<FlxPoint> = new Array<FlxPoint>();
+	private var averagePoint:FlxPoint = new FlxPoint();
+	
+	private var shadowLength:Float = 640;
+	
+	public function new () {}
+	
+	public function buildShadowPolygon(box:Box, source:FlxPoint, shadowLength:Float):Array<FlxPoint>
 	{
-		//get all intersects
-		var intersects:Array<Intersect> = new Array<Intersect>();
-		var ray:Line;
-		for (p in points)
+		points = [];
+		shadowPoints = [];
+		allPoints = [];
+		
+		//go through each vertex
+		for (p in box.vertices)
 		{
-			ray = new Line(source, p);
-			intersects.push(findClosestIntersect(ray, faces));
+			//add this vertex to the array
+			points.push(p);
+			//get the angle between source and vertex
+			var theta:Float = Util.instance.getAngle(p, source);
+			//get the x & y distances
+			var dx1:Float = p.x - source.x;
+			var dy1:Float = p.y - source.y;
+			//get the projected x & y distances
+			var dx2:Float = Math.cos(theta) * shadowLength * 2;
+			var dy2:Float = Math.sin(theta) * shadowLength * 2;
+			//get projected point
+			var p2:FlxPoint = new FlxPoint(source.x + dx2, source.y + dy2);
+			//get the distance between the point and the projected point
+			var d_abs1:Float = Util.instance.getDistance(source, p);
+			var d_abs2:Float = Util.instance.getDistance(source, p2);
+			//if the project point is farther away than the source point
+			if (d_abs1 < d_abs2)
+				//add the shadow point to the array
+				shadowPoints.push(p2);
 		}
-		
-		//sort intersects by angle
-		intersects.sort(function(a:Intersect, b:Intersect) {
-			var a_angle:Float = Util.instance.getAngle(new FlxPoint(a.x, a.y), source);
-			var b_angle:Float = Util.instance.getAngle(new FlxPoint(b.x, b.y), source);
-			if(a_angle < b_angle) return -1;
-			else if(a_angle > b_angle) return 1;
-			else return 0;
-		});
-		
-		//convert intersects into FlxPoints
-		var sorted:Array<FlxPoint> = new Array<FlxPoint>();
-		for (i in intersects)
+		//sort the points by their angle from the source
+		points = Util.instance.sortByAngle(points, source);
+		//remove the 2 points who have the angles between the greatest and smallest, taking into account the weirdness with atan2
+		if (Util.instance.getAngle(points[0], source) < 0 - HALFPI && Util.instance.getAngle(points[3], source) > HALFPI)
 		{
-			sorted.push(new FlxPoint(i.x, i.y));
+			points.pop();
+			points.shift();
+		} else {
+			points.splice(1, 2);
 		}
-		
-		//return the array of points
-		return sorted;
-	}
-	
-	
-	/**
-	 * Runs through all faces and checks for which intersect is the closest one and returns that intersect
-	 * @param	ray
-	 * @return	intersect or null if none found
-	 */
-	private static function findClosestIntersect(ray:Line, faces:Array<Line>):Intersect
-	{
-		var closestIntersect:Intersect = null;
-		
-		var thisIntersect:Intersect;
-		//loop through all faces and find the closet intersect with the given ray
-		
-		for (j in faces)
-		{
-			//get the intersect between this face and the ray
-			thisIntersect = getIntersect(ray, j);
-			//if there was no intersect found
-			if (thisIntersect == null)
-			{
-				//carry on to the next face
-				continue;
-			}
-			//if this is the first intersect found
-			if (closestIntersect == null)
-			{
-				//make this intersect the new closest
-				closestIntersect = thisIntersect;
-				//carry on to the next face
-				continue;
-			}
-			//if this intersect is closer than the previous closest intersect
-			if (thisIntersect.t1 < closestIntersect.t1)
-			{
-				//make this intersect the new closest
-				closestIntersect = thisIntersect;
-				//carry on to the next face
-			}
-		}
-		return closestIntersect;
-	}
-	
-	/**
-	 * Gets the point (if it exists) where the given ray and the given face intersect
-	 * @param	ray	
-	 * @param	face
-	 * @return	intersect if one exists and is within correct limits, null if not
-	 */
-	private static function getIntersect(ray:Line, face:Line):Intersect
-	{
-		//ray in parametric form 
-		var r_px:Float = ray.a.x;
-		var r_py:Float = ray.a.y;
-		var r_dx:Float = ray.b.x - ray.a.x;
-		var r_dy:Float = ray.b.y - ray.a.y;
-		
-		//face in parametric form
-		var f_px:Float = face.a.x;
-		var f_py:Float = face.a.y;
-		var f_dx:Float = face.b.x - face.a.x;
-		var f_dy:Float = face.b.y - face.a.y;
-		
-		//are they parallel?
-		var r_magnitude:Float = Math.sqrt(r_dx * r_dx + r_dy * r_dy);
-		var f_magnitude:Float = Math.sqrt(f_dx * f_dx + f_dy * f_dy);
-		if (r_dx / r_magnitude == f_dx / f_magnitude && r_dy / r_magnitude == f_dy / f_magnitude)//the directions are the same
-		{
-			return null;
-		}
-		
-		//solve for T1 & T2
-		var t2:Float = (r_dx * (f_py - r_py) + r_dy * (r_px - f_px)) / (f_dx * r_dy - f_dy * r_dx);
-		var t1:Float = (f_px + f_dx * t2 - r_px) / r_dx;
-		
-		//if parametric outside correct limits
-		if (t1 < 0)
-		{
-			return null;
-		}
-		
-		if (t2 < 0 || t2 > 1)
-		{
-			return null;
-		}
-		
-		//return the intersect
-		return new Intersect(r_px + r_dx * t1, r_py + r_dy * t1, t1);
+		//append the shadow points to the source points
+		allPoints = points.concat(shadowPoints);
+		//get average position between each stored point
+		averagePoint = Util.instance.getAveragePosition(allPoints);
+		//sort all points by angle from average (ensures the polygon draws properly)
+		allPoints = Util.instance.sortByAngle(allPoints, averagePoint);
+		return allPoints;
 	}
 	
 	
