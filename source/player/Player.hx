@@ -8,6 +8,8 @@ import nape.phys.Material;
 
 class Player extends FlxNapeSprite
 {
+	public var touchingBox:Bool = false;
+	
 	public function new(_x:Float=0, _y:Float=0, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
 	{
 		super(_x, _y, SimpleGraphic, CreateRectangularBody, EnablePhysics);

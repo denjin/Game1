@@ -2,6 +2,7 @@ package;
 
 import flixel.FlxCamera;
 import flixel.group.FlxGroup;
+import nape.constraint.DistanceJoint;
 
 import flash.display.BitmapData;
 import flash.geom.Point;
@@ -104,6 +105,9 @@ class PlayState extends FlxState
 	private var boxCbType:CbType = new CbType();
 	
 	private var collisionListener:InteractionListener;
+	private var collisionEndListener:InteractionListener;
+	
+	private var coverJoint:DistanceJoint;
 	
 	
 	override public function create():Void
@@ -144,6 +148,9 @@ class PlayState extends FlxState
 		
 		collisionListener = new InteractionListener(CbEvent.BEGIN, InteractionType.COLLISION, boxCbType, playerCbType, onPlayerTouchesBox);
 		FlxNapeSpace.space.listeners.add(collisionListener);
+		
+		collisionEndListener = new InteractionListener(CbEvent.END, InteractionType.COLLISION, boxCbType, playerCbType, onPlayerStopsTouchingBox);
+		FlxNapeSpace.space.listeners.add(collisionEndListener);
 		
 		arcMask = new FlxSprite(0, 0);
 		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
@@ -258,6 +265,7 @@ class PlayState extends FlxState
 		for (i in 0...50)
 		{
 			boxes[i] = new Box(Math.random() * screenWidth, Math.random() * screenHeight, 30, 30);
+			boxes[i].body.userData.box = boxes[i];
 			boxes[i].body.cbTypes.add(boxCbType);
 			add(boxes[i]);
 		}
@@ -306,9 +314,25 @@ class PlayState extends FlxState
 		return output;
 	}
 	
+	private function createJoint(player:Player, box:Box):Void
+	{
+		var bPos:FlxPoint = new FlxPoint(box.body.position.x, box.body.position.y);
+		var d:Float = Util.instance.getDistance(playerPosition, bPos);
+		coverJoint = new DistanceJoint(player.body, box.body, new Vec2(), new Vec2(), d, d);
+		FlxNapeSpace.space.constraints.add(coverJoint);
+	}
+	
 	private function onPlayerTouchesBox(cb:InteractionCallback):Void
 	{
-		trace("player touching box");
+		player.touchingBox = true;
+		createJoint(player, cb.int1.userData.box);
+		player.loadGraphic("assets/images/player_touching.png");
+	}
+	
+	private function onPlayerStopsTouchingBox(cb:InteractionCallback):Void
+	{
+		player.touchingBox = false;
+		player.loadGraphic("assets/images/player.png");
 	}
 	
 }
