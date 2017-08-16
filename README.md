@@ -1,1 +1,3 @@
-# Game1
+# Shooter
+
+A game built in HaxeFlixel.
