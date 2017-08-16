@@ -198,6 +198,7 @@ class PlayState extends FlxState
 			//update mouse position
 			mousePosition.x = FlxG.mouse.x;
 			mousePosition.y = FlxG.mouse.y;
+			//x axis movement
 			if (FlxG.keys.anyPressed([A, LEFT]))
 			{
 				player.body.velocity.x = -speed;
@@ -210,7 +211,7 @@ class PlayState extends FlxState
 			{
 				player.body.velocity.x = 0;
 			}
-			
+			//y axis movement
 			if (FlxG.keys.anyPressed([W, UP]))
 			{
 				player.body.velocity.y = -speed;
@@ -222,6 +223,20 @@ class PlayState extends FlxState
 			else
 			{
 				player.body.velocity.y = 0;
+			}
+			//enter cover
+			if (FlxG.keys.anyJustPressed([SHIFT]))
+			{
+				//if player is actually touching a box
+				if (player.touchingBox)
+					enterCover(player.touchedBox);
+			}
+			//exit cover
+			if (FlxG.keys.anyJustReleased([SHIFT]))
+			{
+				//if player was actually in cover
+				if (player.coverJoint != null)
+					exitCover();
 			}
 			lookAngle = Util.instance.getAngle(mousePosition, playerPosition);
 		}
@@ -314,25 +329,32 @@ class PlayState extends FlxState
 		return output;
 	}
 	
-	private function createJoint(player:Player, box:Box):Void
+	private function enterCover(box:Box):Void
 	{
 		var bPos:FlxPoint = new FlxPoint(box.body.position.x, box.body.position.y);
 		var d:Float = Util.instance.getDistance(playerPosition, bPos);
 		coverJoint = new DistanceJoint(player.body, box.body, new Vec2(), new Vec2(), d, d);
 		FlxNapeSpace.space.constraints.add(coverJoint);
+		player.coverJoint = coverJoint;
+		player.loadGraphic("assets/images/player_touching.png");
+	}
+	
+	private function exitCover():Void
+	{
+		player.loadGraphic("assets/images/player.png");
+		FlxNapeSpace.space.constraints.remove(player.coverJoint);
 	}
 	
 	private function onPlayerTouchesBox(cb:InteractionCallback):Void
 	{
 		player.touchingBox = true;
-		createJoint(player, cb.int1.userData.box);
-		player.loadGraphic("assets/images/player_touching.png");
+		player.touchedBox = cb.int1.userData.box;
 	}
 	
 	private function onPlayerStopsTouchingBox(cb:InteractionCallback):Void
 	{
 		player.touchingBox = false;
-		player.loadGraphic("assets/images/player.png");
+		player.touchedBox = null;
 	}
 	
 }

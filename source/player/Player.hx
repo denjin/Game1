@@ -3,12 +3,16 @@ package player;
 import flixel.addons.nape.FlxNapeSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.util.FlxColor;
+import nape.constraint.DistanceJoint;
 import nape.phys.BodyType;
 import nape.phys.Material;
+import objects.Box;
 
 class Player extends FlxNapeSprite
 {
 	public var touchingBox:Bool = false;
+	public var touchedBox:Box = null;
+	public var coverJoint:DistanceJoint;
 	
 	public function new(_x:Float=0, _y:Float=0, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
 	{
