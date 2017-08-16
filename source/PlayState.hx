@@ -26,9 +26,6 @@ import nape.callbacks.InteractionCallback;
 using flixel.util.FlxSpriteUtil;
 import flixel.util.FlxSpriteUtil.LineStyle;
 import flixel.util.FlxSpriteUtil.DrawStyle;
-import flash.geom.Rectangle;
-import flash.display.BitmapDataChannel;
-import flash.geom.ColorTransform;
 
 import flixel.input.gamepad.FlxGamepad;
 import flixel.input.keyboard.FlxKeyboard;
@@ -309,26 +306,7 @@ class PlayState extends FlxState
 		arcMask.x = playerPosition.x - shadowSize / 2;
 		arcMask.y = playerPosition.y - shadowSize / 2;
 	}
-	
-	
-	
-	/**
-	 * applies the mask sprite as an inverse mask to the given sprite and returns it into the output sprite
-	 * @param	sprite
-	 * @param	mask
-	 * @param	output
-	 * @return
-	 */
-	public static function invertedAlphaMaskFlxSprite(sprite:FlxSprite, mask:FlxSprite, output:FlxSprite):FlxSprite
-	{
-		sprite.drawFrame();
-		var data:BitmapData = sprite.pixels.clone();
-		data.copyChannel(mask.pixels, new Rectangle(0, 0, sprite.width, sprite.height), new Point(), BitmapDataChannel.ALPHA, BitmapDataChannel.ALPHA);
-		data.colorTransform(new Rectangle(0, 0, sprite.width, sprite.height), new ColorTransform(0,0,0,-1,0,0,0,255));
-		output.pixels = data;
-		return output;
-	}
-	
+		
 	private function enterCover(box:Box):Void
 	{
 		var bPos:FlxPoint = new FlxPoint(box.body.position.x, box.body.position.y);

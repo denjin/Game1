@@ -1,6 +1,11 @@
 package;
 import flash.geom.Point;
 import flixel.math.FlxPoint;
+import flixel.FlxSprite;
+import flash.display.BitmapData;
+import flash.display.BitmapDataChannel;
+import flash.geom.ColorTransform;
+import flash.geom.Rectangle;
 
 class Util
 {
@@ -81,6 +86,23 @@ class Util
 			else return 0;
 		});
 		return points;
+	}
+	
+	/**
+	 * applies the mask sprite as an inverse mask to the given sprite and returns it into the output sprite
+	 * @param	sprite
+	 * @param	mask
+	 * @param	output
+	 * @return
+	 */
+	public static function invertedAlphaMaskFlxSprite(sprite:FlxSprite, mask:FlxSprite, output:FlxSprite):FlxSprite
+	{
+		sprite.drawFrame();
+		var data:BitmapData = sprite.pixels.clone();
+		data.copyChannel(mask.pixels, new Rectangle(0, 0, sprite.width, sprite.height), new Point(), BitmapDataChannel.ALPHA, BitmapDataChannel.ALPHA);
+		data.colorTransform(new Rectangle(0, 0, sprite.width, sprite.height), new ColorTransform(0,0,0,-1,0,0,0,255));
+		output.pixels = data;
+		return output;
 	}
 	
 }
