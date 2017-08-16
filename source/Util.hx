@@ -37,6 +37,11 @@ class Util
 		return Math.sqrt(dx * dx + dy * dy);
 	}
 	
+	/**
+	 * Gets a point that lies at the mean position from the positions of an array of points
+	 * @param	points
+	 * @return
+	 */
 	public function getAveragePosition(points:Array<FlxPoint>):FlxPoint
 	{
 		var ax:Float = 0;
@@ -54,16 +59,32 @@ class Util
 		return new FlxPoint(ax, ay);
 	}
 	
+	/**
+	 * Converts an angle measured in radians to degrees
+	 * @param	theta
+	 * @return
+	 */
 	public function radToDeg(theta:Float):Float
 	{
 		return theta * 180 / Math.PI;
 	}
 	
+	/**
+	 * Converts an angle measured in degrees to radians
+	 * @param	theta
+	 * @return
+	 */
 	public function degToRad(theta:Float):Float
 	{
 		return theta * Math.PI / 180;
 	}
 	
+	/**
+	 * Takes an array of points and sorts it based on the point's angle from the given origin point
+	 * @param	points
+	 * @param	origin
+	 * @return	the original array
+	 */
 	public function sortByAngle(points:Array<FlxPoint>, origin:FlxPoint):Array<FlxPoint>
 	{
 		points.sort(function(a:FlxPoint, b:FlxPoint) {
@@ -76,6 +97,12 @@ class Util
 		return points;
 	}
 	
+	/**
+	 * Takes an array of points and sorts it based on the point's distance from the given origin point
+	 * @param	points
+	 * @param	origin
+	 * @return	the original array
+	 */
 	public function sortByDistance(points:Array<FlxPoint>, origin:FlxPoint):Array<FlxPoint>
 	{
 		points.sort(function(a:FlxPoint, b:FlxPoint) {
