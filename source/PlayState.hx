@@ -126,7 +126,7 @@ class PlayState extends FlxState
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
-		FlxNapeSpace.drawDebug = true;
+		//FlxNapeSpace.drawDebug = true;
 		
 		super.create();
 		//init the graphics
@@ -252,7 +252,11 @@ class PlayState extends FlxState
 		}
 		
 		//rotate the player
-		player.body.rotation = lookAngle;
+		//player.body.rotation = lookAngle;
+		lookAngle = Util.instance.radToDeg(lookAngle);
+		//trace(lookAngle);
+		
+		player.look(lookAngle);
 		
 		super.update(elapsed);
 	}
