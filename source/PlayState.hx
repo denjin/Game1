@@ -3,6 +3,10 @@ package;
 import flixel.FlxCamera;
 import flixel.group.FlxGroup;
 import nape.constraint.DistanceJoint;
+import nape.constraint.LineJoint;
+import nape.shape.Edge;
+import nape.shape.Polygon;
+import nape.shape.Shape;
 
 import flash.display.BitmapData;
 import flash.geom.Point;
@@ -65,6 +69,7 @@ class PlayState extends FlxState
 	
 	private var player:Player;
 	private var speed:Float = 200;
+	private static var playerRadius:Int = 21;
 	
 	//private var visionArc:Float = Math.PI / 6;
 	private var visionLength:Float = 640;
@@ -86,17 +91,20 @@ class PlayState extends FlxState
 	private var shadow:FlxSprite;
 	private var fog:FlxSprite;
 	private var fogMask:FlxSprite;
+	private var overlay:FlxSprite;
 	
 	private var lineStyle:LineStyle = { color: FlxColor.TRANSPARENT, thickness: 1 };
+	private var lineStyle1:LineStyle = { color: FlxColor.RED, thickness: 1 };
 	private var drawStyle:DrawStyle = { smoothing: true };
 	
 	public var gamepad:FlxGamepad;
 	private var moveAxis:FlxPoint;
 	private var lookAxis:FlxPoint;
-	var lookAngle:Float;
+	private var lookAngle:Float;
 	//private var moveYAxis:FlxPoint;
 	
 	private var shadowPolygon:Array<FlxPoint> = new Array<FlxPoint>();
+	
 	
 	private var playerCbType:CbType = new CbType();
 	private var boxCbType:CbType = new CbType();
@@ -104,7 +112,7 @@ class PlayState extends FlxState
 	private var collisionListener:InteractionListener;
 	private var collisionEndListener:InteractionListener;
 	
-	private var coverJoint:DistanceJoint;
+	private var coverJoint:LineJoint;
 	
 	
 	override public function create():Void
@@ -118,6 +126,7 @@ class PlayState extends FlxState
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
+		FlxNapeSpace.drawDebug = true;
 		
 		super.create();
 		//init the graphics
@@ -153,6 +162,10 @@ class PlayState extends FlxState
 		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
 		arcMask.loadGraphic("assets/images/mask.png");
 		add(arcMask);
+		
+		overlay = new FlxSprite();
+		overlay.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
+		add(overlay);
 	}
 
 	override public function update(elapsed:Float):Void
@@ -246,10 +259,9 @@ class PlayState extends FlxState
 	
 	private function initPlayer():Void
 	{
-		player = new Player(screenWidth / 2, screenHeight / 2);
+		player = new Player(screenWidth / 2, screenHeight / 2, playerRadius);
 		player.body.cbTypes.add(playerCbType);
 		add(player);
-		
 	}
 	
 	/**
@@ -276,7 +288,7 @@ class PlayState extends FlxState
 		boxes = new Array<Box>();
 		for (i in 0...50)
 		{
-			boxes[i] = new Box(Math.random() * screenWidth, Math.random() * screenHeight, 30, 30);
+			boxes[i] = new Box(Math.random() * screenWidth, Math.random() * screenHeight, 60, 60, playerRadius);
 			boxes[i].body.userData.box = boxes[i];
 			boxes[i].body.cbTypes.add(boxCbType);
 			add(boxes[i]);
@@ -308,29 +320,49 @@ class PlayState extends FlxState
 	}
 		
 	private function enterCover(box:Box):Void
-	{
-		var bPos:FlxPoint = new FlxPoint(box.body.position.x, box.body.position.y);
-		var d:Float = Util.instance.getDistance(playerPosition, bPos);
-		coverJoint = new DistanceJoint(player.body, box.body, new Vec2(), new Vec2(), d, d);
+	{	
+		//find the cover face to build the line joint from
+		var coverFace:Line = Util.instance.getClosestCoverFace(box, playerPosition);
+		//get the length of the cover face
+		var length:Float = Util.instance.getDistance(coverFace.a, coverFace.b);
+		//get the direction
+		var dir:Vec2 = Util.instance.lineDirection(coverFace);
+		//get the start point for the joint (converts cover joint in world space to local space)
+		var anchor:Vec2 = new Vec2(coverFace.a.x - box.body.position.x, coverFace.a.y - box.body.position.y);
+		//build the line joint
+		coverJoint = new LineJoint(
+			box.body,			//body 1
+			player.body,		//body 2
+			anchor,				//anchor 1
+			new Vec2(),			//anchor 2
+			dir,				//direction
+			0,					//joint min
+			length				//joint max
+		);
+		//add the joint to the nape space
 		FlxNapeSpace.space.constraints.add(coverJoint);
+		//store the joint within the player
 		player.coverJoint = coverJoint;
+		//change sprite
 		player.loadGraphic("assets/images/player_touching.png");
 	}
 	
 	private function exitCover():Void
 	{
-		player.loadGraphic("assets/images/player.png");
 		FlxNapeSpace.space.constraints.remove(player.coverJoint);
+		overlay.fill(FlxColor.TRANSPARENT);
 	}
 	
 	private function onPlayerTouchesBox(cb:InteractionCallback):Void
 	{
 		player.touchingBox = true;
 		player.touchedBox = cb.int1.userData.box;
+		player.loadGraphic("assets/images/player.png");
 	}
 	
 	private function onPlayerStopsTouchingBox(cb:InteractionCallback):Void
 	{
+		
 		player.touchingBox = false;
 		player.touchedBox = null;
 	}

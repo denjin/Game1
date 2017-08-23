@@ -6,6 +6,11 @@ import flash.display.BitmapData;
 import flash.display.BitmapDataChannel;
 import flash.geom.ColorTransform;
 import flash.geom.Rectangle;
+import nape.geom.Vec2;
+import nape.shape.Edge;
+import nape.shape.Polygon;
+import objects.Box;
+import objects.Line;
 
 class Util
 {
@@ -57,6 +62,66 @@ class Util
 		ay /= points.length;
 		
 		return new FlxPoint(ax, ay);
+	}
+	
+	
+	public function getMidPointFace(face:Line):FlxPoint
+	{
+		var ax:Float = (face.a.x + face.b.x) / 2;
+		var ay:Float = (face.a.y + face.b.y) / 2;
+		return new FlxPoint(ax, ay);
+	}
+	
+	public function getClosestCoverFace(box:Box, origin:FlxPoint):Line
+	{
+		var face:Line = null;
+		var shortestDistance:Float = Math.NEGATIVE_INFINITY;
+		
+		for (f in box.coverFaces)
+		{
+			var d:Float = getDistance(origin, getMidPointFace(f));
+			if (face == null || d <= shortestDistance)
+			{
+				face = f;
+				shortestDistance  = d;
+			}
+		}
+		return face;
+	}
+	
+	public function getClosestPoint(a:FlxPoint, b:FlxPoint, p:FlxPoint):FlxPoint
+	{
+		//vector from a to b
+		var ab:Vec2 = new Vec2(b.x - a.x, b.y - a.y);
+		//vector from a to p
+		var ap:Vec2 = new Vec2(p.x - a.x, p.y - a.y);
+		//size of vector from a to b
+		var abMagnitude:Float = ab.lsq();
+		//dot product of ab and ap
+		var dot:Float = ab.dot(ap);
+		//normalised distance from a to p
+		var d:Float = dot / abMagnitude;
+		
+		if (d < 0)
+		{
+			return a;
+		}
+		else if (d > 1)
+		{
+			return b;
+		}
+		else
+		{
+			return new FlxPoint(a.x + ab.x * d, a.y + ab.y * d);
+		}
+	}
+	
+	
+	
+	public function lineDirection(line:Line):Vec2
+	{
+		var dir:Vec2 = new Vec2(line.b.x - line.a.x, line.b.y - line.a.y);
+		return dir.normalise();
 	}
 	
 	/**
