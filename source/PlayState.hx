@@ -68,6 +68,9 @@ class PlayState extends FlxState
 	private var floor:FlxSprite;
 	
 	private var player:Player;
+	private var playerSprite:FlxSprite;
+	private var playerSpriteOffset:FlxPoint = new FlxPoint(24, 65);
+	
 	private var speed:Float = 200;
 	private static var playerRadius:Int = 21;
 	
@@ -101,7 +104,6 @@ class PlayState extends FlxState
 	private var moveAxis:FlxPoint;
 	private var lookAxis:FlxPoint;
 	private var lookAngle:Float;
-	//private var moveYAxis:FlxPoint;
 	
 	private var shadowPolygon:Array<FlxPoint> = new Array<FlxPoint>();
 	
@@ -126,7 +128,7 @@ class PlayState extends FlxState
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
-		//FlxNapeSpace.drawDebug = true;
+		FlxNapeSpace.drawDebug = true;
 		
 		super.create();
 		//init the graphics
@@ -252,20 +254,26 @@ class PlayState extends FlxState
 		}
 		
 		//rotate the player
-		//player.body.rotation = lookAngle;
 		lookAngle = Util.instance.radToDeg(lookAngle);
-		//trace(lookAngle);
-		
 		player.look(lookAngle);
+		//move the player sprite
+		playerSprite.setPosition(playerPosition.x - playerSpriteOffset.x, playerPosition.y - playerSpriteOffset.y);
+		
 		
 		super.update(elapsed);
 	}
 	
 	private function initPlayer():Void
 	{
-		player = new Player(screenWidth / 2, screenHeight / 2, playerRadius);
+		playerSprite = new FlxSprite(screenWidth / 2, screenHeight / 2 - 50);
+		playerSprite.loadGraphic("assets/images/player/e.png");
+		add(playerSprite);
+		
+		player = new Player(screenWidth / 2, screenHeight / 2, playerRadius, playerSprite);
 		player.body.cbTypes.add(playerCbType);
 		add(player);
+		
+		
 	}
 	
 	/**
@@ -361,12 +369,10 @@ class PlayState extends FlxState
 	{
 		player.touchingBox = true;
 		player.touchedBox = cb.int1.userData.box;
-		player.loadGraphic("assets/images/player.png");
 	}
 	
 	private function onPlayerStopsTouchingBox(cb:InteractionCallback):Void
 	{
-		
 		player.touchingBox = false;
 		player.touchedBox = null;
 	}
