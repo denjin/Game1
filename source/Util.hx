@@ -162,6 +162,16 @@ class Util
 		return points;
 	}
 	
+	public function sortByY(objects:Array<Dynamic>):Array<Dynamic>
+	{
+		objects.sort(function(a, b) {
+			if (a.y == b.y) return 0;
+			if (a.y > b.y) return 1;
+			return -1;
+		});
+		return objects;
+	}
+	
 	/**
 	 * Takes an array of points and sorts it based on the point's distance from the given origin point
 	 * @param	points

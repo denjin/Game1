@@ -8,6 +8,8 @@ import nape.shape.Edge;
 import nape.shape.Polygon;
 import nape.shape.Shape;
 
+import flixel.util.FlxSort;
+
 import flash.display.BitmapData;
 import flash.geom.Point;
 import flixel.FlxG;
@@ -50,9 +52,13 @@ import flixel.addons.nape.FlxNapeSpace;
 
 import flixel.addons.nape.FlxNapeSprite;
 
+import flixel.group.FlxSpriteGroup;
+
 class PlayState extends FlxState
 {	
 	private var visionManager:VisionManager = new VisionManager();
+	
+	private var sortableObjects:FlxSpriteGroup;
 	
 	private var levelWidth:Int = 3840;
 	private var levelHeight:Int = 3840;
@@ -81,6 +87,7 @@ class PlayState extends FlxState
 	private var hud:FlxGroup;
 	
 	private var boxes:Array<Box>;
+	private var boxSprites:Array<FlxSprite>;
 	
 	private var mousePosition:FlxPoint;
 	private var playerPosition:FlxPoint;
@@ -130,9 +137,15 @@ class PlayState extends FlxState
 		FlxNapeSpace.space.gravity.setxy(0, 0);
 		FlxNapeSpace.drawDebug = true;
 		
+		
+		
+		
 		super.create();
 		//init the graphics
 		initGraphics();
+		
+		sortableObjects = new FlxSpriteGroup();
+		add(sortableObjects);
 		
 		createBoxes();
 		
@@ -260,6 +273,7 @@ class PlayState extends FlxState
 		playerSprite.setPosition(playerPosition.x - playerSpriteOffset.x, playerPosition.y - playerSpriteOffset.y);
 		
 		
+		sortableObjects.sort(FlxSort.byY, FlxSort.ASCENDING);
 		super.update(elapsed);
 	}
 	
@@ -267,13 +281,13 @@ class PlayState extends FlxState
 	{
 		playerSprite = new FlxSprite(screenWidth / 2, screenHeight / 2 - 50);
 		playerSprite.loadGraphic("assets/images/player/e.png");
-		add(playerSprite);
+		//add(playerSprite);
 		
 		player = new Player(screenWidth / 2, screenHeight / 2, playerRadius, playerSprite);
 		player.body.cbTypes.add(playerCbType);
-		add(player);
+		//add(player);
 		
-		
+		sortableObjects.add(playerSprite);
 	}
 	
 	/**
@@ -298,12 +312,21 @@ class PlayState extends FlxState
 	private function createBoxes():Void
 	{
 		boxes = new Array<Box>();
+		boxSprites = new Array<FlxSprite>();
+		var _x:Float;
+		var _y:Float;
 		for (i in 0...50)
 		{
-			boxes[i] = new Box(Math.random() * screenWidth, Math.random() * screenHeight, 60, 60, playerRadius);
+			_x = Math.random() * screenWidth;
+			_y = Math.random() * screenHeight;
+			boxes[i] = new Box(_x, _y, 60, 60, playerRadius);
 			boxes[i].body.userData.box = boxes[i];
 			boxes[i].body.cbTypes.add(boxCbType);
 			add(boxes[i]);
+			boxSprites[i] = new FlxSprite(_x - 30, _y - 30);
+			boxSprites[i].loadGraphic("assets/images/box.png", false, 60, 100, true);
+			//add(boxSprites[i]);
+			sortableObjects.add(boxSprites[i]);
 		}
 	}
 	
