@@ -166,6 +166,7 @@ class Util
 		return points;
 	}
 	
+<<<<<<< HEAD
 	public static function sortByY(objects:Array<Dynamic>):Array<Dynamic>
 	{
 		objects.sort(function(a, b) {
@@ -176,6 +177,8 @@ class Util
 		return objects;
 	}
 	
+=======
+>>>>>>> parent of 612f1a2... Added depth sorting
 	/**
 	 * Takes an array of points and sorts it based on the point's distance from the given origin point
 	 * @param	points
