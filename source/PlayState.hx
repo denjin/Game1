@@ -44,7 +44,7 @@ import objects.Line;
 import objects.MyPoint;
 
 import vision.VisionManager;
-import Util;
+using Util;
 
 import openfl.display.FPS;
 
@@ -58,7 +58,7 @@ class PlayState extends FlxState
 {	
 	private var visionManager:VisionManager = new VisionManager();
 	
-	private var sortableObjects:FlxSpriteGroup;
+	private var wallSprites:FlxTypedGroup<FlxSpriteGroup>;
 	
 	private var levelWidth:Int = 3840;
 	private var levelHeight:Int = 3840;
@@ -135,7 +135,7 @@ class PlayState extends FlxState
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
-		FlxNapeSpace.drawDebug = true;
+		//FlxNapeSpace.drawDebug = true;
 		
 		
 		
@@ -144,8 +144,8 @@ class PlayState extends FlxState
 		//init the graphics
 		initGraphics();
 		
-		sortableObjects = new FlxSpriteGroup();
-		add(sortableObjects);
+		wallSprites = new FlxTypedGroup<FlxSpriteGroup>();
+		add(wallSprites);
 		
 		createBoxes();
 		
@@ -158,7 +158,7 @@ class PlayState extends FlxState
 		
 		FlxG.addChildBelowMouse(fps = new FPS(FlxG.width - 60, 5, FlxColor.WHITE));
 		
-		FlxG.camera.follow(player, LOCKON, 1);
+		FlxG.camera.follow(playerSprite, LOCKON, 1);
 		FlxG.camera.minScrollX = 0;
 		FlxG.camera.minScrollY = 0;
 		FlxG.camera.maxScrollX = levelWidth;
@@ -176,11 +176,11 @@ class PlayState extends FlxState
 		arcMask = new FlxSprite(0, 0);
 		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
 		arcMask.loadGraphic("assets/images/mask.png");
-		add(arcMask);
+		//add(arcMask);
 		
 		overlay = new FlxSprite();
 		overlay.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
-		add(overlay);
+		//add(overlay);
 	}
 
 	override public function update(elapsed:Float):Void
@@ -217,7 +217,7 @@ class PlayState extends FlxState
 			lookAxis.y = value.RIGHT_STICK_Y;
 			player.body.velocity.x = moveAxis.x * speed;
 			player.body.velocity.y = moveAxis.y * speed;
-			lookAngle = Util.instance.getAngle(lookAxis, new FlxPoint(0, 0));
+			lookAngle = Util.getAngle(lookAxis, new FlxPoint(0, 0));
 			
 		} else {//if using a keyboard and mouse
 			//update mouse position
@@ -263,17 +263,16 @@ class PlayState extends FlxState
 				if (player.coverJoint != null)
 					exitCover();
 			}
-			lookAngle = Util.instance.getAngle(mousePosition, playerPosition);
+			lookAngle = Util.getAngle(mousePosition, playerPosition);
 		}
 		
 		//rotate the player
-		lookAngle = Util.instance.radToDeg(lookAngle);
+		lookAngle = Util.radToDeg(lookAngle);
 		player.look(lookAngle);
 		//move the player sprite
 		playerSprite.setPosition(playerPosition.x - playerSpriteOffset.x, playerPosition.y - playerSpriteOffset.y);
 		
-		
-		sortableObjects.sort(FlxSort.byY, FlxSort.ASCENDING);
+		//sortableObjects.sort(FlxSort.byY, FlxSort.ASCENDING);
 		super.update(elapsed);
 	}
 	
@@ -281,13 +280,13 @@ class PlayState extends FlxState
 	{
 		playerSprite = new FlxSprite(screenWidth / 2, screenHeight / 2 - 50);
 		playerSprite.loadGraphic("assets/images/player/e.png");
-		//add(playerSprite);
+		add(playerSprite);
 		
 		player = new Player(screenWidth / 2, screenHeight / 2, playerRadius, playerSprite);
 		player.body.cbTypes.add(playerCbType);
 		//add(player);
 		
-		sortableObjects.add(playerSprite);
+		//sortableObjects.add(playerSprite);
 	}
 	
 	/**
@@ -297,7 +296,7 @@ class PlayState extends FlxState
 	{	
 		//sprite to hold the floor graphics
 		floor = new FlxSprite(0, 0);
-		floor.makeGraphic(levelWidth, levelHeight, 0xff88A2A0);
+		floor.makeGraphic(levelWidth, levelHeight, 0xff364156);
 		//floor.loadGraphic("assets/images/floor.png");
 		add(floor);
 		
@@ -312,21 +311,28 @@ class PlayState extends FlxState
 	private function createBoxes():Void
 	{
 		boxes = new Array<Box>();
-		boxSprites = new Array<FlxSprite>();
+		//boxSprites = new Array<FlxSprite>();
 		var _x:Float;
 		var _y:Float;
-		for (i in 0...50)
+		for (i in 0...10)
 		{
+			var g:FlxSpriteGroup = new FlxSpriteGroup();
 			_x = Math.random() * screenWidth;
 			_y = Math.random() * screenHeight;
-			boxes[i] = new Box(_x, _y, 60, 60, playerRadius);
+			boxes[i] = new Box(g, _x, _y, 60, 60, playerRadius);
 			boxes[i].body.userData.box = boxes[i];
 			boxes[i].body.cbTypes.add(boxCbType);
+			
+			
+			var _shadow:FlxSprite = new FlxSprite(0, 0);
+			_shadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
+			g.add(_shadow);
+			var _box:FlxSprite = new FlxSprite(_x - 30, _y - 30);
+			_box.makeGraphic(60, 60, 0xff212D40, false);
+			g.add(_box);
+			wallSprites.add(g);
+			
 			add(boxes[i]);
-			boxSprites[i] = new FlxSprite(_x - 30, _y - 30);
-			boxSprites[i].loadGraphic("assets/images/box.png", false, 60, 100, true);
-			//add(boxSprites[i]);
-			sortableObjects.add(boxSprites[i]);
 		}
 	}
 	
@@ -335,18 +341,27 @@ class PlayState extends FlxState
 	 */
 	private function drawVision():Void
 	{	
+		var shadow:FlxSprite;
 		//clear the vision layer
-		shadow.fill(FlxColor.TRANSPARENT);
+		//shadow.fill(FlxColor.TRANSPARENT);
+		
 		//go through each box
 		for (b in boxes)
 		{
+			shadow = b.spriteGroup.members[0];
+			shadow.fill(FlxColor.TRANSPARENT);
+			shadowPolygon = [];
 			//check box is inside the range to actually have a visible shadow
-			if (Util.instance.getDistance(b.or, playerPosition) < visionLength)
+			if (Util.getDistance(b.or, playerPosition) < visionLength)
 			{
 				//build a shadow polygon for the given box
 				shadowPolygon = visionManager.buildShadowPolygon(b, playerPosition, visionLength);
+				shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
 				//draw a polygon using the sorted points
-				shadow.drawPolygon(shadowPolygon, 0xff000000, lineStyle, drawStyle);
+				//var _shadow:FlxSprite = new FlxSprite();
+				//_shadow.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT);
+				//_shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
+				//shadowSprites.add(_shadow);
 			}
 		}
 		//move the arc mask
@@ -357,11 +372,11 @@ class PlayState extends FlxState
 	private function enterCover(box:Box):Void
 	{	
 		//find the cover face to build the line joint from
-		var coverFace:Line = Util.instance.getClosestCoverFace(box, playerPosition);
+		var coverFace:Line = Util.getClosestCoverFace(box, playerPosition);
 		//get the length of the cover face
-		var length:Float = Util.instance.getDistance(coverFace.a, coverFace.b);
+		var length:Float = Util.getDistance(coverFace.a, coverFace.b);
 		//get the direction
-		var dir:Vec2 = Util.instance.lineDirection(coverFace);
+		var dir:Vec2 = Util.lineDirection(coverFace);
 		//get the start point for the joint (converts cover joint in world space to local space)
 		var anchor:Vec2 = new Vec2(coverFace.a.x - box.body.position.x, coverFace.a.y - box.body.position.y);
 		//build the line joint

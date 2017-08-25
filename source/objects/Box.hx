@@ -1,6 +1,7 @@
 package objects;
 
 import flixel.addons.nape.FlxNapeSprite;
+import flixel.group.FlxSpriteGroup;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import nape.phys.BodyType;
@@ -16,9 +17,13 @@ class Box extends FlxNapeSprite
 	public var faces:Array<Line> = new Array<Line>();
 	public var coverFaces:Array<Line> = new Array<Line>();
 	
-	public function new(_x:Float=0, _y:Float=0, _width:Int, _height:Int, _playerRadius, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
+	//a sprite to hold the shadow
+	public var spriteGroup:FlxSpriteGroup;
+	
+	public function new(_spriteGroup:FlxSpriteGroup, _x:Float=0, _y:Float=0, _width:Int, _height:Int, _playerRadius, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
 	{	
 		super(_x, _y, SimpleGraphic, CreateRectangularBody, EnablePhysics);
+		spriteGroup = _spriteGroup;
 		or = new FlxPoint(_x, _y);
 		//init the graphics and physics body
 		this.makeGraphic(1, 1, FlxColor.TRANSPARENT);
@@ -52,6 +57,8 @@ class Box extends FlxNapeSprite
 		var f3a:FlxPoint = new FlxPoint(vertices[3].x - _playerRadius, vertices[3].y);
 		var f3b:FlxPoint = new FlxPoint(vertices[0].x - _playerRadius, vertices[0].y);
 		coverFaces[3] = new Line(f3a, f3b);
+		
+		//add(shadow);
 		
 	}
 	

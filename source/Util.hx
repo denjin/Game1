@@ -14,9 +14,6 @@ import objects.Line;
 
 class Util
 {
-	static public var instance(get, null):Util;
-	static function get_instance(): Util return (instance == null) ? instance = new Util() : instance;
-	private function new() {}
 	
 	/**
 	 * Gets the angle between two points (vectors)
@@ -24,7 +21,7 @@ class Util
 	 * @param	b
 	 * @return
 	 */
-	public function getAngle(a:FlxPoint, b:FlxPoint):Float
+	public static function getAngle(a:FlxPoint, b:FlxPoint):Float
 	{
 		return Math.atan2(a.y - b.y, a.x - b.x);
 	}
@@ -35,7 +32,7 @@ class Util
 	 * @param	b
 	 * @return
 	 */
-	public function getDistance(a:FlxPoint, b:FlxPoint):Float
+	public static function getDistance(a:FlxPoint, b:FlxPoint):Float
 	{
 		var dx:Float = b.x - a.x;
 		var dy:Float = b.y - a.y;
@@ -47,7 +44,7 @@ class Util
 	 * @param	points
 	 * @return
 	 */
-	public function getAveragePosition(points:Array<FlxPoint>):FlxPoint
+	public static function getAveragePosition(points:Array<FlxPoint>):FlxPoint
 	{
 		var ax:Float = 0;
 		var ay:Float = 0;
@@ -65,14 +62,14 @@ class Util
 	}
 	
 	
-	public function getMidPointFace(face:Line):FlxPoint
+	public static function getMidPointFace(face:Line):FlxPoint
 	{
 		var ax:Float = (face.a.x + face.b.x) / 2;
 		var ay:Float = (face.a.y + face.b.y) / 2;
 		return new FlxPoint(ax, ay);
 	}
 	
-	public function getClosestCoverFace(box:Box, origin:FlxPoint):Line
+	public static function getClosestCoverFace(box:Box, origin:FlxPoint):Line
 	{
 		var face:Line = null;
 		var shortestDistance:Float = Math.NEGATIVE_INFINITY;
@@ -89,7 +86,14 @@ class Util
 		return face;
 	}
 	
-	public function getClosestPoint(a:FlxPoint, b:FlxPoint, p:FlxPoint):FlxPoint
+	/**
+	 * Gets the flxpoint on a line a->b that lies closest to point p
+	 * @param	a
+	 * @param	b
+	 * @param	p
+	 * @return
+	 */
+	public static function getClosestPoint(a:FlxPoint, b:FlxPoint, p:FlxPoint):FlxPoint
 	{
 		//vector from a to b
 		var ab:Vec2 = new Vec2(b.x - a.x, b.y - a.y);
@@ -118,7 +122,7 @@ class Util
 	
 	
 	
-	public function lineDirection(line:Line):Vec2
+	public static function lineDirection(line:Line):Vec2
 	{
 		var dir:Vec2 = new Vec2(line.b.x - line.a.x, line.b.y - line.a.y);
 		return dir.normalise();
@@ -129,7 +133,7 @@ class Util
 	 * @param	theta
 	 * @return
 	 */
-	public function radToDeg(theta:Float):Float
+	public static function radToDeg(theta:Float):Float
 	{
 		return theta * 180 / Math.PI;
 	}
@@ -139,7 +143,7 @@ class Util
 	 * @param	theta
 	 * @return
 	 */
-	public function degToRad(theta:Float):Float
+	public static function degToRad(theta:Float):Float
 	{
 		return theta * Math.PI / 180;
 	}
@@ -150,7 +154,7 @@ class Util
 	 * @param	origin
 	 * @return	the original array
 	 */
-	public function sortByAngle(points:Array<FlxPoint>, origin:FlxPoint):Array<FlxPoint>
+	public static function sortByAngle(points:Array<FlxPoint>, origin:FlxPoint):Array<FlxPoint>
 	{
 		points.sort(function(a:FlxPoint, b:FlxPoint) {
 			var a_angle:Float = getAngle(a, origin);
@@ -162,7 +166,7 @@ class Util
 		return points;
 	}
 	
-	public function sortByY(objects:Array<Dynamic>):Array<Dynamic>
+	public static function sortByY(objects:Array<Dynamic>):Array<Dynamic>
 	{
 		objects.sort(function(a, b) {
 			if (a.y == b.y) return 0;
@@ -178,7 +182,7 @@ class Util
 	 * @param	origin
 	 * @return	the original array
 	 */
-	public function sortByDistance(points:Array<FlxPoint>, origin:FlxPoint):Array<FlxPoint>
+	public static function sortByDistance(points:Array<FlxPoint>, origin:FlxPoint):Array<FlxPoint>
 	{
 		points.sort(function(a:FlxPoint, b:FlxPoint) {
 			var a_dist:Float = getDistance(a, origin);
