@@ -26,8 +26,8 @@ class Box extends FlxNapeSprite
 		spriteGroup = _spriteGroup;
 		or = new FlxPoint(_x, _y);
 		//init the graphics and physics body
-		//this.makeGraphic(_width, _height, 0xff708583/*FlxColor.TRANSPARENT*/);
-		this.loadGraphic("assets/images/box.png", false, 60, 140);
+		this.makeGraphic(1, 1, FlxColor.TRANSPARENT);
+		//this.loadGraphic("assets/images/box.png", false, 60, 140);
 		this.createRectangularBody(_width, _height, BodyType.STATIC);
 		this.physicsEnabled = true;
 		//store the vertices
