@@ -9,7 +9,7 @@ import flash.geom.Rectangle;
 import nape.geom.Vec2;
 import nape.shape.Edge;
 import nape.shape.Polygon;
-import objects.Box;
+import objects.Wall;
 import objects.Line;
 
 class Util
@@ -69,12 +69,12 @@ class Util
 		return new FlxPoint(ax, ay);
 	}
 	
-	public static function getClosestCoverFace(box:Box, origin:FlxPoint):Line
+	public static function getClosestCoverFace(wall:Wall, origin:FlxPoint):Line
 	{
 		var face:Line = null;
 		var shortestDistance:Float = Math.NEGATIVE_INFINITY;
 		
-		for (f in box.coverFaces)
+		for (f in wall.coverFaces)
 		{
 			var d:Float = getDistance(origin, getMidPointFace(f));
 			if (face == null || d <= shortestDistance)

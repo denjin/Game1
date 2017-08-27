@@ -2,7 +2,7 @@ package vision;
 
 import flixel.FlxSprite;
 import flixel.math.FlxPoint;
-import objects.Box;
+import objects.Wall;
 using Util;
 
 class VisionManager {
@@ -18,14 +18,14 @@ class VisionManager {
 	
 	public function new () {}
 	
-	public function buildShadowPolygon(box:Box, source:FlxPoint, shadowLength:Float):Array<FlxPoint>
+	public function buildShadowPolygon(wall:Wall, source:FlxPoint, shadowLength:Float):Array<FlxPoint>
 	{
 		points = [];
 		shadowPoints = [];
 		allPoints = [];
 		
 		//go through each vertex
-		for (p in box.vertices)
+		for (p in wall.vertices)
 		{
 			//add this vertex to the array
 			points.push(p);

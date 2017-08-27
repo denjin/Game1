@@ -8,7 +8,7 @@ import nape.phys.BodyType;
 import flixel.FlxSprite;
 import flixel.util.FlxColor;
 
-class Box extends FlxNapeSprite
+class Wall extends FlxNapeSprite
 {
 	public var or:FlxPoint;
 	//an array that stores the vertices of this box as an array of points

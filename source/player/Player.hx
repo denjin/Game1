@@ -7,12 +7,12 @@ import flixel.util.FlxColor;
 import nape.constraint.LineJoint;
 import nape.phys.BodyType;
 import nape.phys.Material;
-import objects.Box;
+import objects.Wall;
 
 class Player extends FlxNapeSprite
 {
-	public var touchingBox:Bool = false;
-	public var touchedBox:Box = null;
+	public var touchingWall:Bool = false;
+	public var touchedWall:Wall = null;
 	public var coverJoint:LineJoint;
 	private var sprite:FlxSprite;
 	

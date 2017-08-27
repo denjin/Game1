@@ -20,7 +20,7 @@ import nape.callbacks.InteractionListener;
 import nape.callbacks.InteractionType;
 import nape.constraint.LineJoint;
 import nape.geom.Vec2;
-import objects.Box;
+import objects.Wall;
 import objects.Line;
 import openfl.display.FPS;
 import player.Player;
@@ -61,22 +61,14 @@ class PlayState extends FlxState
 	private var hudCam:FlxCamera;
 	private var hud:FlxGroup;
 	
-	private var boxes:Array<Box>;
-	private var boxSprites:Array<FlxSprite>;
+	private var walls:Array<Wall>;
+	//private var boxSprites:Array<FlxSprite>;
 	
 	private var mousePosition:FlxPoint;
 	private var playerPosition:FlxPoint;
 	private var cameraPosition:FlxPoint;
 	
-	private var arcMask:FlxSprite;
-	
-	private var visionMask:FlxSprite;
-	
-	
 	private var shadow:FlxSprite;
-	private var fog:FlxSprite;
-	private var fogMask:FlxSprite;
-	private var overlay:FlxSprite;
 	
 	private var lineStyle:LineStyle = { color: FlxColor.TRANSPARENT, thickness: 1 };
 	private var lineStyle1:LineStyle = { color: FlxColor.RED, thickness: 1 };
@@ -122,7 +114,8 @@ class PlayState extends FlxState
 		wallSprites = new FlxSpriteGroup();
 		add(wallSprites);
 		
-		createBoxes();
+		createWalls();
+		
 		
 		initPlayer();
 		moveAxis = new FlxPoint();
@@ -147,15 +140,6 @@ class PlayState extends FlxState
 		
 		collisionEndListener = new InteractionListener(CbEvent.END, InteractionType.COLLISION, boxCbType, playerCbType, onPlayerStopsTouchingBox);
 		FlxNapeSpace.space.listeners.add(collisionEndListener);
-		
-		arcMask = new FlxSprite(0, 0);
-		arcMask.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
-		arcMask.loadGraphic("assets/images/mask.png");
-		//add(arcMask);
-		
-		overlay = new FlxSprite();
-		overlay.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT, true);
-		//add(overlay);
 	}
 
 	override public function update(elapsed:Float):Void
@@ -228,8 +212,8 @@ class PlayState extends FlxState
 			if (FlxG.keys.anyJustPressed([SHIFT]))
 			{
 				//if player is actually touching a box
-				if (player.touchingBox)
-					enterCover(player.touchedBox);
+				if (player.touchingWall)
+					enterCover(player.touchedWall);
 			}
 			//exit cover
 			if (FlxG.keys.anyJustReleased([SHIFT]))
@@ -272,7 +256,6 @@ class PlayState extends FlxState
 		//sprite to hold the floor graphics
 		floor = new FlxSprite(0, 0);
 		floor.makeGraphic(levelWidth, levelHeight, 0xff364156);
-		//floor.loadGraphic("assets/images/floor.png");
 		add(floor);
 		
 		//sprite that occludes the area of the map not currently visible
@@ -283,9 +266,9 @@ class PlayState extends FlxState
 	}
 	
 	
-	private function createBoxes():Void
+	private function createWalls():Void
 	{
-		boxes = new Array<Box>();
+		walls = new Array<Wall>();
 		//boxSprites = new Array<FlxSprite>();
 		var _x:Float;
 		var _y:Float;
@@ -293,15 +276,15 @@ class PlayState extends FlxState
 		{
 			_x = Math.random() * screenWidth;
 			_y = Math.random() * screenHeight;
-			boxes[i] = new Box(_x, _y, 60, 60, playerRadius);
-			boxes[i].body.userData.box = boxes[i];
-			boxes[i].body.cbTypes.add(boxCbType);
+			walls[i] = new Wall(_x, _y, 60, 60, playerRadius);
+			walls[i].body.userData.wall = walls[i];
+			walls[i].body.cbTypes.add(boxCbType);
 			
-			var _box:FlxSprite = new FlxSprite(_x - 30, _y - 30);
-			_box.makeGraphic(60, 60, 0xff212D40, false);
-			wallSprites.add(_box);
+			var _wall:FlxSprite = new FlxSprite(_x - 30, _y - 30);
+			_wall.makeGraphic(60, 60, 0xff212D40, false);
+			wallSprites.add(_wall);
 			
-			add(boxes[i]);
+			add(walls[i]);
 		}
 	}
 	
@@ -314,35 +297,32 @@ class PlayState extends FlxState
 		shadow.fill(FlxColor.TRANSPARENT);
 		
 		//go through each box
-		for (b in boxes)
+		for (w in walls)
 		{
 			//check box is inside the range to actually have a visible shadow
-			if (Util.getDistance(b.or, playerPosition) < visionLength)
+			if (Util.getDistance(w.or, playerPosition) < visionLength)
 			{
 				//build a shadow polygon for the given box
-				shadowPolygon = visionManager.buildShadowPolygon(b, playerPosition, visionLength);
+				shadowPolygon = visionManager.buildShadowPolygon(w, playerPosition, visionLength);
 				//draw the polygon in the shadow sprite
 				shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
 			}
 		}
-		//move the arc mask
-		arcMask.x = playerPosition.x - shadowSize / 2;
-		arcMask.y = playerPosition.y - shadowSize / 2;
 	}
 		
-	private function enterCover(box:Box):Void
+	private function enterCover(wall:Wall):Void
 	{	
 		//find the cover face to build the line joint from
-		var coverFace:Line = Util.getClosestCoverFace(box, playerPosition);
+		var coverFace:Line = Util.getClosestCoverFace(wall, playerPosition);
 		//get the length of the cover face
 		var length:Float = Util.getDistance(coverFace.a, coverFace.b);
 		//get the direction
 		var dir:Vec2 = Util.lineDirection(coverFace);
 		//get the start point for the joint (converts cover joint in world space to local space)
-		var anchor:Vec2 = new Vec2(coverFace.a.x - box.body.position.x, coverFace.a.y - box.body.position.y);
+		var anchor:Vec2 = new Vec2(coverFace.a.x - wall.body.position.x, coverFace.a.y - wall.body.position.y);
 		//build the line joint
 		coverJoint = new LineJoint(
-			box.body,			//body 1
+			wall.body,			//body 1
 			player.body,		//body 2
 			anchor,				//anchor 1
 			new Vec2(),			//anchor 2
@@ -355,25 +335,24 @@ class PlayState extends FlxState
 		//store the joint within the player
 		player.coverJoint = coverJoint;
 		//change sprite
-		player.loadGraphic("assets/images/player_touching.png");
+		//player.loadGraphic("assets/images/player_touching.png");
 	}
 	
 	private function exitCover():Void
 	{
 		FlxNapeSpace.space.constraints.remove(player.coverJoint);
-		overlay.fill(FlxColor.TRANSPARENT);
 	}
 	
 	private function onPlayerTouchesBox(cb:InteractionCallback):Void
 	{
-		player.touchingBox = true;
-		player.touchedBox = cb.int1.userData.box;
+		player.touchingWall = true;
+		player.touchedWall = cb.int1.userData.wall;
 	}
 	
 	private function onPlayerStopsTouchingBox(cb:InteractionCallback):Void
 	{
-		player.touchingBox = false;
-		player.touchedBox = null;
+		player.touchingWall = false;
+		player.touchedWall = null;
 	}
 	
 }
