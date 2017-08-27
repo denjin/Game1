@@ -17,13 +17,9 @@ class Box extends FlxNapeSprite
 	public var faces:Array<Line> = new Array<Line>();
 	public var coverFaces:Array<Line> = new Array<Line>();
 	
-	//a sprite to hold the shadow
-	public var spriteGroup:FlxSpriteGroup;
-	
-	public function new(_spriteGroup:FlxSpriteGroup, _x:Float=0, _y:Float=0, _width:Int, _height:Int, _playerRadius, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
+	public function new(_x:Float=0, _y:Float=0, _width:Int, _height:Int, _playerRadius, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
 	{	
 		super(_x, _y, SimpleGraphic, CreateRectangularBody, EnablePhysics);
-		spriteGroup = _spriteGroup;
 		or = new FlxPoint(_x, _y);
 		//init the graphics and physics body
 		this.makeGraphic(1, 1, FlxColor.TRANSPARENT);

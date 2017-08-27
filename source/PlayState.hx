@@ -1,64 +1,39 @@
 package;
 
 import flixel.FlxCamera;
-import flixel.group.FlxGroup;
-import nape.constraint.DistanceJoint;
-import nape.constraint.LineJoint;
-import nape.shape.Edge;
-import nape.shape.Polygon;
-import nape.shape.Shape;
-
-import flixel.util.FlxSort;
-
-import flash.display.BitmapData;
-import flash.geom.Point;
 import flixel.FlxG;
 import flixel.FlxSprite;
-import flixel.math.FlxPoint;
-import flixel.util.FlxColor;
 import flixel.FlxState;
+import flixel.addons.nape.FlxNapeSpace;
+import flixel.group.FlxGroup;
+import flixel.group.FlxSpriteGroup;
+import flixel.input.gamepad.FlxGamepad;
+import flixel.math.FlxPoint;
 import flixel.text.FlxText;
-import flixel.ui.FlxButton;
-import flixel.math.FlxMath;
-import haxe.io.Float32Array;
-import nape.geom.Vec2;
-
+import flixel.util.FlxColor;
+import flixel.util.FlxSpriteUtil.DrawStyle;
+import flixel.util.FlxSpriteUtil.LineStyle;
 import nape.callbacks.CbEvent;
 import nape.callbacks.CbType;
+import nape.callbacks.InteractionCallback;
 import nape.callbacks.InteractionListener;
 import nape.callbacks.InteractionType;
-import nape.callbacks.InteractionCallback;
+import nape.constraint.LineJoint;
+import nape.geom.Vec2;
+import objects.Box;
+import objects.Line;
+import openfl.display.FPS;
+import player.Player;
+import vision.VisionManager;
 
 using flixel.util.FlxSpriteUtil;
-import flixel.util.FlxSpriteUtil.LineStyle;
-import flixel.util.FlxSpriteUtil.DrawStyle;
-
-import flixel.input.gamepad.FlxGamepad;
-import flixel.input.keyboard.FlxKeyboard;
-
-import player.Player;
-
-import objects.Box;
-import objects.Intersect;
-import objects.Line;
-import objects.MyPoint;
-
-import vision.VisionManager;
 using Util;
-
-import openfl.display.FPS;
-
-import flixel.addons.nape.FlxNapeSpace;
-
-import flixel.addons.nape.FlxNapeSprite;
-
-import flixel.group.FlxSpriteGroup;
 
 class PlayState extends FlxState
 {	
 	private var visionManager:VisionManager = new VisionManager();
 	
-	private var wallSprites:FlxTypedGroup<FlxSpriteGroup>;
+	private var wallSprites:FlxSpriteGroup;
 	
 	private var levelWidth:Int = 3840;
 	private var levelHeight:Int = 3840;
@@ -144,7 +119,7 @@ class PlayState extends FlxState
 		//init the graphics
 		initGraphics();
 		
-		wallSprites = new FlxTypedGroup<FlxSpriteGroup>();
+		wallSprites = new FlxSpriteGroup();
 		add(wallSprites);
 		
 		createBoxes();
@@ -316,21 +291,15 @@ class PlayState extends FlxState
 		var _y:Float;
 		for (i in 0...10)
 		{
-			var g:FlxSpriteGroup = new FlxSpriteGroup();
 			_x = Math.random() * screenWidth;
 			_y = Math.random() * screenHeight;
-			boxes[i] = new Box(g, _x, _y, 60, 60, playerRadius);
+			boxes[i] = new Box(_x, _y, 60, 60, playerRadius);
 			boxes[i].body.userData.box = boxes[i];
 			boxes[i].body.cbTypes.add(boxCbType);
 			
-			
-			var _shadow:FlxSprite = new FlxSprite(0, 0);
-			_shadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
-			g.add(_shadow);
 			var _box:FlxSprite = new FlxSprite(_x - 30, _y - 30);
 			_box.makeGraphic(60, 60, 0xff212D40, false);
-			g.add(_box);
-			wallSprites.add(g);
+			wallSprites.add(_box);
 			
 			add(boxes[i]);
 		}
@@ -341,27 +310,19 @@ class PlayState extends FlxState
 	 */
 	private function drawVision():Void
 	{	
-		var shadow:FlxSprite;
-		//clear the vision layer
-		//shadow.fill(FlxColor.TRANSPARENT);
+		//clear the shadow sprite
+		shadow.fill(FlxColor.TRANSPARENT);
 		
 		//go through each box
 		for (b in boxes)
 		{
-			shadow = b.spriteGroup.members[0];
-			shadow.fill(FlxColor.TRANSPARENT);
-			shadowPolygon = [];
 			//check box is inside the range to actually have a visible shadow
 			if (Util.getDistance(b.or, playerPosition) < visionLength)
 			{
 				//build a shadow polygon for the given box
 				shadowPolygon = visionManager.buildShadowPolygon(b, playerPosition, visionLength);
+				//draw the polygon in the shadow sprite
 				shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
-				//draw a polygon using the sorted points
-				//var _shadow:FlxSprite = new FlxSprite();
-				//_shadow.makeGraphic(FlxG.width, FlxG.height, FlxColor.TRANSPARENT);
-				//_shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
-				//shadowSprites.add(_shadow);
 			}
 		}
 		//move the arc mask
