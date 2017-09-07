@@ -1,5 +1,6 @@
 package;
 
+import flash.geom.Rectangle;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -9,6 +10,7 @@ import flixel.group.FlxGroup;
 import flixel.group.FlxSpriteGroup;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.math.FlxPoint;
+import flixel.math.FlxRect;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import flixel.util.FlxSpriteUtil.DrawStyle;
@@ -26,20 +28,19 @@ import openfl.display.FPS;
 import player.Player;
 import vision.VisionManager;
 
+import flixel.util.FlxCollision;
+
+import utils.Global;
+
 using flixel.util.FlxSpriteUtil;
-using Util;
+using utils.Util;
+
 
 class PlayState extends FlxState
 {	
 	private var visionManager:VisionManager = new VisionManager();
 	
 	private var wallSprites:FlxSpriteGroup;
-	
-	private var levelWidth:Int = 3840;
-	private var levelHeight:Int = 3840;
-	
-	private var screenWidth:Int;
-	private var screenHeight:Int;
 	
 	private var shadowSize:Int = 2204;
 	
@@ -56,7 +57,7 @@ class PlayState extends FlxState
 	private static var playerRadius:Int = 21;
 	
 	//private var visionArc:Float = Math.PI / 6;
-	private var visionLength:Float = 640;
+	private var visionLength:Float = 1000;
 	
 	private var hudCam:FlxCamera;
 	private var hud:FlxGroup;
@@ -64,11 +65,10 @@ class PlayState extends FlxState
 	private var walls:Array<Wall>;
 	//private var boxSprites:Array<FlxSprite>;
 	
-	private var mousePosition:FlxPoint;
 	private var playerPosition:FlxPoint;
-	private var cameraPosition:FlxPoint;
 	
 	private var shadow:FlxSprite;
+	private var visionSprite:FlxSprite;
 	
 	private var lineStyle:LineStyle = { color: FlxColor.TRANSPARENT, thickness: 1 };
 	private var lineStyle1:LineStyle = { color: FlxColor.RED, thickness: 1 };
@@ -94,11 +94,13 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		//init some utility variables
-		mousePosition = new FlxPoint();
-		playerPosition = new FlxPoint(400, 400);
-		cameraPosition = new FlxPoint();
-		screenWidth = FlxG.stage.stageWidth;
-		screenHeight = FlxG.stage.stageHeight;
+		Global.instance.mousePosition = new FlxPoint();
+		playerPosition = new FlxPoint();
+		Global.instance.screen = new FlxRect(0, 0, FlxG.stage.stageWidth, FlxG.stage.stageHeight);
+		
+		Global.instance.levelWidth = 3840;
+		Global.instance.levelHeight = 3840;
+		
 		//init the physics space
 		FlxNapeSpace.init();
 		FlxNapeSpace.space.gravity.setxy(0, 0);
@@ -108,16 +110,19 @@ class PlayState extends FlxState
 		
 		
 		super.create();
-		//init the graphics
-		initGraphics();
 		
-		wallSprites = new FlxSpriteGroup();
-		add(wallSprites);
+		//sprite to hold the floor graphics
+		floor = new FlxSprite(0, 0);
+		floor.makeGraphic(Global.instance.levelWidth, Global.instance.levelHeight, 0xff364156);
+		add(floor);
 		
 		createWalls();
 		
+		//init the shadow
+		initShadow();
 		
 		initPlayer();
+		
 		moveAxis = new FlxPoint();
 		lookAxis = new FlxPoint();
 		
@@ -129,8 +134,8 @@ class PlayState extends FlxState
 		FlxG.camera.follow(playerSprite, LOCKON, 1);
 		FlxG.camera.minScrollX = 0;
 		FlxG.camera.minScrollY = 0;
-		FlxG.camera.maxScrollX = levelWidth;
-		FlxG.camera.maxScrollY = levelHeight;
+		FlxG.camera.maxScrollX = Global.instance.levelWidth;
+		FlxG.camera.maxScrollY = Global.instance.levelHeight;
 		
 		//hudCam = new FlxCamera(0, 0, screenWidth, screenHeight);
 		//hud = new FlxGroup();
@@ -140,6 +145,54 @@ class PlayState extends FlxState
 		
 		collisionEndListener = new InteractionListener(CbEvent.END, InteractionType.COLLISION, boxCbType, playerCbType, onPlayerStopsTouchingBox);
 		FlxNapeSpace.space.listeners.add(collisionEndListener);
+	}
+	
+	private function initPlayer():Void
+	{
+		playerSprite = new FlxSprite(Global.instance.screen.width / 2, Global.instance.screen.height / 2 - 50);
+		playerSprite.loadGraphic("assets/images/player/e.png");
+		add(playerSprite);
+		
+		player = new Player(Global.instance.screen.width / 2, Global.instance.screen.height / 2, playerRadius, playerSprite);
+		player.body.cbTypes.add(playerCbType);
+	}
+	
+	/**
+	 * Creates and adds the shadow graphics into the scene
+	 */
+	private function initShadow():Void
+	{	
+		//sprite that occludes the area of the map not currently visible
+		shadow = new FlxSprite(0, 0);
+		shadow.makeGraphic(Std.int(Global.instance.screen.width), Std.int(Global.instance.screen.height), FlxColor.TRANSPARENT, true);
+		shadow.alpha = 0.5;
+		add(shadow);
+	}
+	
+	
+	private function createWalls():Void
+	{
+		wallSprites = new FlxSpriteGroup();
+		add(wallSprites);
+		
+		walls = new Array<Wall>();
+		//boxSprites = new Array<FlxSprite>();
+		var _x:Float;
+		var _y:Float;
+		for (i in 0...50)
+		{
+			_x = Math.random() * Global.instance.levelWidth;
+			_y = Math.random() * Global.instance.levelHeight;
+			walls[i] = new Wall(_x, _y, 60, 60, playerRadius);
+			walls[i].body.userData.wall = walls[i];
+			walls[i].body.cbTypes.add(boxCbType);
+			
+			var _wall:FlxSprite = new FlxSprite(_x - 30, _y - 30);
+			_wall.makeGraphic(60, 60, 0xff212D40, false);
+			wallSprites.add(_wall);
+			
+			add(walls[i]);
+		}
 	}
 
 	override public function update(elapsed:Float):Void
@@ -154,15 +207,15 @@ class PlayState extends FlxState
 		playerPosition.x = player.body.position.x;
 		playerPosition.y = player.body.position.y;
 		//get the camera's position
-		cameraPosition.x = FlxG.camera.scroll.x;
-		cameraPosition.y = FlxG.camera.scroll.y;
+		Global.instance.screen.x = FlxG.camera.scroll.x;
+		Global.instance.screen.y = FlxG.camera.scroll.y;
 		//move the shadow sprite
-		//shadow.x = cameraPosition.x;
-		//shadow.y = cameraPosition.y;
+		shadow.x = Global.instance.screen.x;
+		shadow.y = Global.instance.screen.y;
 		
 		
-		//draw the shadow polygons
-		drawVision();
+		
+		
 		//get any connected gamepad
 		gamepad = FlxG.gamepads.lastActive;
 		
@@ -180,8 +233,8 @@ class PlayState extends FlxState
 			
 		} else {//if using a keyboard and mouse
 			//update mouse position
-			mousePosition.x = FlxG.mouse.x;
-			mousePosition.y = FlxG.mouse.y;
+			Global.instance.mousePosition.x = FlxG.mouse.x;
+			Global.instance.mousePosition.y = FlxG.mouse.y;
 			//x axis movement
 			if (FlxG.keys.anyPressed([A, LEFT]))
 			{
@@ -222,7 +275,7 @@ class PlayState extends FlxState
 				if (player.coverJoint != null)
 					exitCover();
 			}
-			lookAngle = Util.getAngle(mousePosition, playerPosition);
+			lookAngle = Util.getAngle(Global.instance.mousePosition, playerPosition);
 		}
 		
 		//rotate the player
@@ -230,63 +283,15 @@ class PlayState extends FlxState
 		player.look(lookAngle);
 		//move the player sprite
 		playerSprite.setPosition(playerPosition.x - playerSpriteOffset.x, playerPosition.y - playerSpriteOffset.y);
-		
 		//sortableObjects.sort(FlxSort.byY, FlxSort.ASCENDING);
+		//draw the shadow polygons
+		drawVision();
+		
+		//trace(lookAngle);
 		super.update(elapsed);
 	}
 	
-	private function initPlayer():Void
-	{
-		playerSprite = new FlxSprite(screenWidth / 2, screenHeight / 2 - 50);
-		playerSprite.loadGraphic("assets/images/player/e.png");
-		add(playerSprite);
-		
-		player = new Player(screenWidth / 2, screenHeight / 2, playerRadius, playerSprite);
-		player.body.cbTypes.add(playerCbType);
-		//add(player);
-		
-		//sortableObjects.add(playerSprite);
-	}
 	
-	/**
-	 * Creates and adds the various graphics assets into the scene
-	 */
-	private function initGraphics():Void
-	{	
-		//sprite to hold the floor graphics
-		floor = new FlxSprite(0, 0);
-		floor.makeGraphic(levelWidth, levelHeight, 0xff364156);
-		add(floor);
-		
-		//sprite that occludes the area of the map not currently visible
-		shadow = new FlxSprite(0, 0);
-		shadow.makeGraphic(screenWidth, screenHeight, FlxColor.TRANSPARENT, true);
-		//shadow.alpha = 0.25;
-		add(shadow);
-	}
-	
-	
-	private function createWalls():Void
-	{
-		walls = new Array<Wall>();
-		//boxSprites = new Array<FlxSprite>();
-		var _x:Float;
-		var _y:Float;
-		for (i in 0...10)
-		{
-			_x = Math.random() * screenWidth;
-			_y = Math.random() * screenHeight;
-			walls[i] = new Wall(_x, _y, 60, 60, playerRadius);
-			walls[i].body.userData.wall = walls[i];
-			walls[i].body.cbTypes.add(boxCbType);
-			
-			var _wall:FlxSprite = new FlxSprite(_x - 30, _y - 30);
-			_wall.makeGraphic(60, 60, 0xff212D40, false);
-			wallSprites.add(_wall);
-			
-			add(walls[i]);
-		}
-	}
 	
 	/**
 	 * Draws the visible area as a polygon and applies that polygon as an inverse mask to the given sprite
@@ -295,6 +300,17 @@ class PlayState extends FlxState
 	{	
 		//clear the shadow sprite
 		shadow.fill(FlxColor.TRANSPARENT);
+		shadowPolygon = [];
+		//create shadow of the area outside the player's vision
+		shadowPolygon = visionManager.buildVisionPolygon(playerPosition, lookAngle, 20);
+		for (p in shadowPolygon)
+		{
+			p.x += Global.instance.screen.width / 2;
+			p.y += Global.instance.screen.height / 2;
+		}
+		//draw this shadow
+		shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
+		
 		
 		//go through each box
 		for (w in walls)
@@ -302,12 +318,15 @@ class PlayState extends FlxState
 			//check box is inside the range to actually have a visible shadow
 			if (Util.getDistance(w.or, playerPosition) < visionLength)
 			{
+				shadowPolygon = [];
 				//build a shadow polygon for the given box
-				shadowPolygon = visionManager.buildShadowPolygon(w, playerPosition, visionLength);
+				shadowPolygon = visionManager.buildShadowPolygon(w, playerPosition, visionLength, FlxPoint.weak(Global.instance.screen.x, Global.instance.screen.y));
 				//draw the polygon in the shadow sprite
 				shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
+				shadow.drawRect(w.x - w.w / 2 - Global.instance.screen.x, w.y - w.h / 2 - Global.instance.screen.y, w.w, w.h, 0xff11151C, lineStyle, drawStyle);
 			}
 		}
+		
 	}
 		
 	private function enterCover(wall:Wall):Void

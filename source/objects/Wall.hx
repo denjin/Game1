@@ -11,6 +11,8 @@ import flixel.util.FlxColor;
 class Wall extends FlxNapeSprite
 {
 	public var or:FlxPoint;
+	public var w:Int;
+	public var h:Int;
 	//an array that stores the vertices of this box as an array of points
 	public var vertices:Array<FlxPoint> = new Array<FlxPoint>();
 	//an array that stores the faces of this box as an array of lines
@@ -20,6 +22,8 @@ class Wall extends FlxNapeSprite
 	public function new(_x:Float=0, _y:Float=0, _width:Int, _height:Int, _playerRadius, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
 	{	
 		super(_x, _y, SimpleGraphic, CreateRectangularBody, EnablePhysics);
+		w = _width;
+		h = _height;
 		or = new FlxPoint(_x, _y);
 		//init the graphics and physics body
 		this.makeGraphic(1, 1, FlxColor.TRANSPARENT);
