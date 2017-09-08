@@ -4,12 +4,13 @@ import flixel.FlxSprite;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import objects.Wall;
-import objects.Line;
-import objects.Intersect;
+import maths.Line;
 using utils.Util;
 import utils.Global;
 
+using flixel.math.FlxMath;
 
+import flixel.util.FlxCollision;
 
 class VisionManager {
 	private static inline var HALFPI:Float = 1.57079632679;
@@ -21,45 +22,60 @@ class VisionManager {
 	private var outputPoints:Array<FlxPoint> = new Array<FlxPoint>();
 	private var averagePoint:FlxPoint = new FlxPoint();
 	
-	private var border:FlxRect;
+	private var zero:FlxPoint = new FlxPoint(0, 0);
 	
 	private var shadowLength:Float = 2203;
 	
-	public function new () {}
+	private var c0:FlxPoint;
+	private var c1:FlxPoint;
+	private var c2:FlxPoint;
+	private var c3:FlxPoint;
+	
+	private var a0:Float = 0;
+	private var a1:Float = 0;
+	private var a2:Float = 0;
+	private var a3:Float = 0;
+	
+	private var basePoint:FlxPoint = new FlxPoint();
+	private var basePoint0:FlxPoint = new FlxPoint();
+	
+	private var p0:FlxPoint = new FlxPoint();
+	private var p1:FlxPoint = new FlxPoint();
+	
+	private var q0:String = "";
+	private var q1:String = "";
+	
+	private var ap0:Float = 0;
+	private var ap1:Float = 0;
+	
+	
+	public function new () {
+		c0 = new FlxPoint(0 - Global.instance.screen.width / 2, 0 - Global.instance.screen.height / 2);
+		c1 = new FlxPoint(0 + Global.instance.screen.width / 2, 0 - Global.instance.screen.height / 2);
+		c2 = new FlxPoint(0 + Global.instance.screen.width / 2, 0 + Global.instance.screen.height / 2);
+		c3 = new FlxPoint(0 - Global.instance.screen.width / 2, 0 + Global.instance.screen.height / 2);
+		
+		a0 = Util.getAngle(zero, c0);
+		a1 = Util.getAngle(zero, c1);
+		a2 = Util.getAngle(zero, c2);
+		a3 = Util.getAngle(zero, c3);
+	}
 	
 	public function buildVisionPolygon(source:FlxPoint, angle:Float, arc:Float):Array<FlxPoint>
 	{
-		var zero:FlxPoint = new FlxPoint(0, 0);
-		var points:Array<FlxPoint> = new Array<FlxPoint>();
+		points = [];
 		
-		//var c0:FlxPoint = new FlxPoint(Global.instance.screen.x, Global.instance.screen.y);
-		//var c1:FlxPoint = new FlxPoint(Global.instance.screen.x + Global.instance.screen.width, Global.instance.screen.y);
-		//var c2:FlxPoint = new FlxPoint(Global.instance.screen.x + Global.instance.screen.width, Global.instance.screen.y + Global.instance.screen.height);
-		//var c3:FlxPoint = new FlxPoint(Global.instance.screen.x, Global.instance.screen.y + Global.instance.screen.height);
+		basePoint = Util.rotate(new FlxPoint(shadowLength, 0), zero, angle);
+		basePoint0 = Util.rotate(new FlxPoint(1, 0), zero, angle);
 		
-		var c0:FlxPoint = new FlxPoint(0 - Global.instance.screen.width / 2, 0 - Global.instance.screen.height / 2);
-		var c1:FlxPoint = new FlxPoint(0 + Global.instance.screen.width / 2, 0 - Global.instance.screen.height / 2);
-		var c2:FlxPoint = new FlxPoint(0 + Global.instance.screen.width / 2, 0 + Global.instance.screen.height / 2);
-		var c3:FlxPoint = new FlxPoint(0 - Global.instance.screen.width / 2, 0 + Global.instance.screen.height / 2);
+		p0 = Util.rotate(basePoint, zero, arc);
+		p1 = Util.rotate(basePoint, zero, -arc);
 		
-		var a0:Float = Util.getAngle(zero, c0);
-		var a1:Float = Util.getAngle(zero, c1);
-		var a2:Float = Util.getAngle(zero, c2);
-		var a3:Float = Util.getAngle(zero, c3);
+		q0 = new String("");
+		q1 = new String("");
 		
-		
-		
-		var basePoint:FlxPoint = Util.rotate(new FlxPoint(shadowLength, 0), zero, angle);
-		var basePoint0:FlxPoint = Util.rotate(new FlxPoint(1, 0), zero, angle);
-		
-		var p0:FlxPoint = Util.rotate(basePoint, zero, arc);
-		var p1:FlxPoint = Util.rotate(basePoint, zero, -arc);
-		
-		var q0:String = new String("");
-		var q1:String = new String("");
-		
-		var ap0:Float = Util.getAngle(zero, p0);
-		var ap1:Float = Util.getAngle(zero, p1);
+		ap0 = Util.getAngle(zero, p0);
+		ap1 = Util.getAngle(zero, p1);
 		
 		if (ap0 > a0 && ap0 < a1)
 		{
@@ -87,8 +103,6 @@ class VisionManager {
 			q1 = "E";
 		}
 		
-		
-		
 		if ((q0 == "N" && q1 == "W") || (q0 == "W" && q1 == "N"))
 		{
 		} else {
@@ -113,19 +127,14 @@ class VisionManager {
 			points.push(new FlxPoint(c3.x, c3.y));
 		}
 		
-		
 		points.push(p0);
 		points.push(p1);
-
 		points.push(basePoint0);
 		
 		points = Util.sortByAngle(points, zero);
 		
 		return points;
 	}
-	
-	
-	
 	
 	public function buildShadowPolygon(wall:Wall, source:FlxPoint, shadowLength:Float, offset:FlxPoint):Array<FlxPoint>
 	{
@@ -145,8 +154,8 @@ class VisionManager {
 			var dx1:Float = p.x - source.x;
 			var dy1:Float = p.y - source.y;
 			//get the projected x & y distances
-			var dx2:Float = Math.cos(theta) * shadowLength * 2;
-			var dy2:Float = Math.sin(theta) * shadowLength * 2;
+			var dx2:Float = FlxMath.fastCos(theta) * shadowLength * 2;
+			var dy2:Float = FlxMath.fastSin(theta) * shadowLength * 2;
 			//get projected point
 			var p2:FlxPoint = new FlxPoint(source.x + dx2, source.y + dy2);
 			//get the distance between the point and the projected point
