@@ -61,22 +61,31 @@ class VisionManager {
 		a3 = Util.getAngle(zero, c3);
 	}
 	
-	public function buildVisionPolygon(source:FlxPoint, angle:Float, arc:Float):Array<FlxPoint>
+	/**
+	 * Creates and array of points for drawing an area that lies outside the given arc in the given angle
+	 * The output polygon is position agnostic and everything is centered around [0,0] so must be moved appropriately by the calling method
+	 * @param	angle	the angle the arc is pointing towards
+	 * @param	arc		the length of the arc in each direction away from the given angle
+	 * @return			an array of points that describes the polygon to be drawn
+	 */
+	public function buildVisionPolygon(angle:Float, arc:Float):Array<FlxPoint>
 	{
+		//clear array
 		points = [];
-		
+		//project point off the screen in the given angle
 		basePoint = Util.rotate(new FlxPoint(shadowLength, 0), zero, angle);
+		//priject point just in front of the player in the given angle
 		basePoint0 = Util.rotate(new FlxPoint(1, 0), zero, angle);
-		
+		//create points at upper and lower bound of the vision arc
 		p0 = Util.rotate(basePoint, zero, arc);
 		p1 = Util.rotate(basePoint, zero, -arc);
-		
+		//empty strings for quadrant check
 		q0 = new String("");
 		q1 = new String("");
-		
+		//angle between the source and the two bounding points
 		ap0 = Util.getAngle(zero, p0);
 		ap1 = Util.getAngle(zero, p1);
-		
+		//check which quadrant the projected lines lie in (N/E/S/W)
 		if (ap0 > a0 && ap0 < a1)
 		{
 			q0 = "N";
@@ -102,7 +111,7 @@ class VisionManager {
 		} else {
 			q1 = "E";
 		}
-		
+		//check which corner points to add based on the quadrants of the bounding points
 		if ((q0 == "N" && q1 == "W") || (q0 == "W" && q1 == "N"))
 		{
 		} else {
@@ -126,16 +135,25 @@ class VisionManager {
 		} else {
 			points.push(new FlxPoint(c3.x, c3.y));
 		}
-		
+		//add bounding points to output
 		points.push(p0);
 		points.push(p1);
+		//add base point to the output array
 		points.push(basePoint0);
-		
+		//sort output points by angle from source to prepare for drawing
 		points = Util.sortByAngle(points, zero);
 		
 		return points;
 	}
 	
+	/**
+	 * Creates an array of points for drawing a shadow being cast by the given wall from a given source
+	 * @param	wall
+	 * @param	source
+	 * @param	shadowLength
+	 * @param	offset
+	 * @return
+	 */
 	public function buildShadowPolygon(wall:Wall, source:FlxPoint, shadowLength:Float, offset:FlxPoint):Array<FlxPoint>
 	{
 		points = [];

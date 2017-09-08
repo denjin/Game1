@@ -302,9 +302,11 @@ class PlayState extends FlxState
 	{	
 		//clear the shadow sprite
 		shadow.fill(FlxColor.TRANSPARENT);
+		//clear the drawing array
 		shadowPolygon = [];
 		//create shadow of the area outside the player's vision
-		shadowPolygon = visionManager.buildVisionPolygon(playerPosition, lookAngle, 40);
+		shadowPolygon = visionManager.buildVisionPolygon(lookAngle, 40);
+		//move shadow polygon from 0,0 to the centre of the screen
 		for (p in shadowPolygon)
 		{
 			p.x += Global.instance.screen.width / 2;
@@ -313,12 +315,13 @@ class PlayState extends FlxState
 		//draw this shadow
 		shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
 		
-		
+		//cast shadow on player's vision
 		//go through each wall
 		for (w in walls)
 		{
 			if (Util.getDistance(w.or, playerPosition) < visionLength)
 			{
+				//clear the drawing array
 				shadowPolygon = [];
 				//build a shadow polygon for the given box
 				shadowPolygon = visionManager.buildShadowPolygon(w, playerPosition, visionLength, FlxPoint.weak(Global.instance.screen.x, Global.instance.screen.y));
