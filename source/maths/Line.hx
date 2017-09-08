@@ -1,4 +1,4 @@
-package objects;
+package maths;
 import flixel.math.FlxPoint;
 
 class Line
