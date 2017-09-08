@@ -10,7 +10,7 @@ import nape.geom.Vec2;
 import nape.shape.Edge;
 import nape.shape.Polygon;
 import objects.Wall;
-import objects.Line;
+import maths.Line;
 
 import utils.Global;
 

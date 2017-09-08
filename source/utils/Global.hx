@@ -9,13 +9,9 @@ class Global
 	private function new() {}
 	
 	public var mousePosition:FlxPoint;
-	//public var cameraPosition:FlxPoint;
 	
 	public var screen:FlxRect;
 	
 	public var levelWidth:Int;
 	public var levelHeight:Int;
-	
-	//public var screenWidth:Int;
-	//public var screenHeight:Int;
 }

@@ -23,7 +23,7 @@ import nape.callbacks.InteractionType;
 import nape.constraint.LineJoint;
 import nape.geom.Vec2;
 import objects.Wall;
-import objects.Line;
+import maths.Line;
 import openfl.display.FPS;
 import player.Player;
 import vision.VisionManager;
@@ -38,7 +38,7 @@ using utils.Util;
 
 class PlayState extends FlxState
 {	
-	private var visionManager:VisionManager = new VisionManager();
+	private var visionManager:VisionManager;
 	
 	private var wallSprites:FlxSpriteGroup;
 	
@@ -98,6 +98,8 @@ class PlayState extends FlxState
 		playerPosition = new FlxPoint();
 		Global.instance.screen = new FlxRect(0, 0, FlxG.stage.stageWidth, FlxG.stage.stageHeight);
 		
+		visionManager = new VisionManager();
+		
 		Global.instance.levelWidth = 3840;
 		Global.instance.levelHeight = 3840;
 		
@@ -132,10 +134,10 @@ class PlayState extends FlxState
 		FlxG.addChildBelowMouse(fps = new FPS(FlxG.width - 60, 5, FlxColor.WHITE));
 		
 		FlxG.camera.follow(playerSprite, LOCKON, 1);
-		FlxG.camera.minScrollX = 0;
-		FlxG.camera.minScrollY = 0;
-		FlxG.camera.maxScrollX = Global.instance.levelWidth;
-		FlxG.camera.maxScrollY = Global.instance.levelHeight;
+		//FlxG.camera.minScrollX = 0;
+		//FlxG.camera.minScrollY = 0;
+		//FlxG.camera.maxScrollX = Global.instance.levelWidth;
+		//FlxG.camera.maxScrollY = Global.instance.levelHeight;
 		
 		//hudCam = new FlxCamera(0, 0, screenWidth, screenHeight);
 		//hud = new FlxGroup();
@@ -302,7 +304,7 @@ class PlayState extends FlxState
 		shadow.fill(FlxColor.TRANSPARENT);
 		shadowPolygon = [];
 		//create shadow of the area outside the player's vision
-		shadowPolygon = visionManager.buildVisionPolygon(playerPosition, lookAngle, 20);
+		shadowPolygon = visionManager.buildVisionPolygon(playerPosition, lookAngle, 40);
 		for (p in shadowPolygon)
 		{
 			p.x += Global.instance.screen.width / 2;
@@ -312,10 +314,9 @@ class PlayState extends FlxState
 		shadow.drawPolygon(shadowPolygon, 0xff11151C, lineStyle, drawStyle);
 		
 		
-		//go through each box
+		//go through each wall
 		for (w in walls)
 		{
-			//check box is inside the range to actually have a visible shadow
 			if (Util.getDistance(w.or, playerPosition) < visionLength)
 			{
 				shadowPolygon = [];
