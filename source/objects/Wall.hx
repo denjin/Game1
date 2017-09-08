@@ -8,8 +8,12 @@ import maths.Line;
 import nape.phys.BodyType;
 import flixel.FlxSprite;
 import flixel.util.FlxColor;
+import objects.interfaces.ICastsShadow;
+import objects.interfaces.IProvidesCover;
 
-class Wall extends FlxNapeSprite implements IProvidesCover
+class Wall extends FlxNapeSprite
+	implements IProvidesCover
+	implements ICastsShadow
 {
 	public var or:FlxPoint;
 	public var w:Int;
