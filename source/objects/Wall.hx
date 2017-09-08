@@ -16,8 +16,6 @@ class Wall extends FlxNapeSprite implements IProvidesCover
 	public var h:Int;
 	//an array that stores the vertices of this box as an array of points
 	public var vertices:Array<FlxPoint> = new Array<FlxPoint>();
-	//an array that stores the faces of this box as an array of lines
-	public var faces:Array<Line> = new Array<Line>();
 	public var coverFaces:Array<Line> = new Array<Line>();
 	
 	public function new(_x:Float=0, _y:Float=0, _width:Int, _height:Int, _playerRadius, ?SimpleGraphic:FlxGraphicAsset, CreateRectangularBody:Bool=false, EnablePhysics:Bool=false) 
@@ -36,11 +34,6 @@ class Wall extends FlxNapeSprite implements IProvidesCover
 		vertices[1] = new FlxPoint(_x + _width / 2, _y - _height / 2);//top right
 		vertices[2] = new FlxPoint(_x + _width / 2, _y + _height / 2);//bottom right
 		vertices[3] = new FlxPoint(_x - _width / 2, _y + _height / 2);//bottom left
-		//store the faces
-		faces[0] = new Line(vertices[0], vertices[1]);//top Left ->		top right
-		faces[1] = new Line(vertices[1], vertices[2]);//top right ->	bottom right
-		faces[2] = new Line(vertices[2], vertices[3]);//bottom right ->	bottom left
-		faces[3] = new Line(vertices[3], vertices[0]);//bottom left ->	top left
 		//store the cover faces
 		//top Left -> top right
 		var f0a:FlxPoint = new FlxPoint(vertices[0].x, vertices[0].y - _playerRadius);
