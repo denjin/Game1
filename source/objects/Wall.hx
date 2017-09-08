@@ -4,11 +4,12 @@ import flixel.addons.nape.FlxNapeSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import maths.Line;
 import nape.phys.BodyType;
 import flixel.FlxSprite;
 import flixel.util.FlxColor;
 
-class Wall extends FlxNapeSprite
+class Wall extends FlxNapeSprite implements IProvidesCover
 {
 	public var or:FlxPoint;
 	public var w:Int;
@@ -57,9 +58,6 @@ class Wall extends FlxNapeSprite
 		var f3a:FlxPoint = new FlxPoint(vertices[3].x - _playerRadius, vertices[3].y);
 		var f3b:FlxPoint = new FlxPoint(vertices[0].x - _playerRadius, vertices[0].y);
 		coverFaces[3] = new Line(f3a, f3b);
-		
-		//add(shadow);
-		
 	}
 	
 }
