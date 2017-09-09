@@ -111,30 +111,107 @@ class VisionManager {
 		} else {
 			q1 = "E";
 		}
-		//check which corner points to add based on the quadrants of the bounding points
-		if ((q0 == "N" && q1 == "W") || (q0 == "W" && q1 == "N"))
+		
+		
+		//add corner points based on quadrant facings of the projected points
+		switch (q0)
 		{
-		} else {
-			points.push(new FlxPoint(c0.x, c0.y));
+			case "N":
+				switch (q1)
+				{
+					case "N":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "E":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "S":
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+					case "W":
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));						
+					default:
+						
+				}
+				
+			case "E":
+				switch (q1)
+				{
+					case "N":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "E":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "S":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c3.x, c3.y));						
+					case "W":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+					default:
+						
+				}
+				
+			case "S":
+				switch (q1)
+				{
+					case "N":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "E":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "S":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));						
+					case "W":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+					default:
+						
+				}
+				
+			case "W":
+				switch (q1)
+				{
+					case "N":
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "E":
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));
+					case "S":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+					case "W":
+						points.push(new FlxPoint(c0.x, c0.y));
+						points.push(new FlxPoint(c1.x, c1.y));
+						points.push(new FlxPoint(c2.x, c2.y));
+						points.push(new FlxPoint(c3.x, c3.y));						
+					default:
+						
+				}
+				
+			default:
+				trace("dud");
 		}
 		
-		if ((q0 == "N" && q1 == "E") || (q0 == "E" && q1 == "N"))
-		{
-		} else {
-			points.push(new FlxPoint(c1.x, c1.y));
-		}
-		
-		if ((q0 == "S" && q1 == "E") || (q0 == "E" && q1 == "S"))
-		{
-		} else {
-			points.push(new FlxPoint(c2.x, c2.y));
-		}
-		
-		if ((q0 == "S" && q1 == "W") || (q0 == "W" && q1 == "S"))
-		{
-		} else {
-			points.push(new FlxPoint(c3.x, c3.y));
-		}
 		//add bounding points to output
 		points.push(p0);
 		points.push(p1);
