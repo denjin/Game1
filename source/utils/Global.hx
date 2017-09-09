@@ -14,4 +14,8 @@ class Global
 	
 	public var levelWidth:Int;
 	public var levelHeight:Int;
+	
+	public var shadowColour:Int = 0xff11151C;
+	
+	public var visionArc:Int = 60;
 }
